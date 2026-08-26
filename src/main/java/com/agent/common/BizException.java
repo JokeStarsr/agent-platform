@@ -1,11 +1,9 @@
 package com.agent.common;
 
-import lombok.Getter;
-
 /**
  * 业务异常（配合全局异常处理器，业务代码禁止裸抛 RuntimeException）
+ * 手写实现，避免 IDE 缺少 Lombok 注解处理器时编译失败
  */
-@Getter
 public class BizException extends RuntimeException {
 
     private final int code;
@@ -18,5 +16,9 @@ public class BizException extends RuntimeException {
     public BizException(int code, String message) {
         super(message);
         this.code = code;
+    }
+
+    public int getCode() {
+        return code;
     }
 }

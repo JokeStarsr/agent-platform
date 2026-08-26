@@ -1,3 +1,7 @@
+app:
+  rag:
+    enabled: false        # 配置好 ZHIPUAI_API_KEY 后改为 true，启用 RAG 服务
+
 server:
   port: 8080
 
