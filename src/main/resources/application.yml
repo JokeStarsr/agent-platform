@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: agent-platform
+
+  ai:
+    # L6 模型服务：DeepSeek（OpenAI 兼容协议）
+    # 若改用 sub2api 网关，base-url 换成 http://localhost:8180/v1 即可
+    openai:
+      base-url: https://api.deepseek.com
+      api-key: ${DEEPSEEK_API_KEY:"sk-请填入你的DeepSeekKey"}
+      chat:
+        options:
+          model: deepseek-chat
+          max-tokens: 4096
+          temperature: 0.7
+          stream-options:
+            include-usage: true
+
+    # 智谱 Embedding（RAG 向量化用，未配 key 时不启用）
+    zhipuai:
+      api-key: ${ZHIPUAI_API_KEY:}
+
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        dimensions: 1024
+
+  # L7 数据层：PostgreSQL + pgvector（本地开发，docker-compose 一键起）
+  datasource:
+    url: jdbc:postgresql://localhost:5432/agent_platform
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  # 短期记忆（P2 使用，先起容器避免误连）
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{trace_id:-}] %logger{36} - %msg%n"
