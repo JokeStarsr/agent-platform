@@ -14,18 +14,22 @@ spring:
     # 若改用 sub2api 网关，base-url 换成 http://localhost:8180/v1 即可
     openai:
       base-url: https://api.deepseek.com
-      api-key: ${DEEPSEEK_API_KEY:"sk-请填入你的DeepSeekKey"}
+      api-key: ${DEEPSEEK_API_KEY:sk-请填入你的DeepSeekKey}
       chat:
         options:
           model: deepseek-chat
           max-tokens: 4096
           temperature: 0.7
-          stream-options:
-            include-usage: true
+          stream-usage: true
+      # 禁用 OpenAI 侧 embedding，保证全应用仅一个 EmbeddingModel bean（zhipuai）
+      embedding:
+        enabled: false
 
-    # 智谱 Embedding（RAG 向量化用，未配 key 时不启用）
+    # 智谱 Embedding（RAG 向量化用）；禁用其 chat，保证全应用仅一个 ChatModel bean（openai）
     zhipuai:
       api-key: ${ZHIPUAI_API_KEY:}
+      chat:
+        enabled: false
 
     vectorstore:
       pgvector:
