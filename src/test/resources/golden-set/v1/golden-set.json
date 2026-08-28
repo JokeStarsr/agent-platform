@@ -1,0 +1,1126 @@
+{
+  "version": "1.0",
+  "createdAt": "2026-08-27",
+  "items": [
+    {
+      "id": "KB-001",
+      "category": "退换货",
+      "difficulty": "easy",
+      "question": "7天内商品可以无理由退货吗？",
+      "expect": {
+        "answer": "可以。自签收之日起7日内，商品不影响二次销售即可发起无理由退货。",
+        "answerSource": [
+          "tc_policy_v3.md#3.2"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-002",
+      "category": "退换货",
+      "difficulty": "easy",
+      "question": "退货需要保留原包装吗？",
+      "expect": {
+        "answer": "可以。商品必须保留完整包装、配件和赠品，不影响二次销售方可退换。",
+        "answerSource": [
+          "tc_policy_v3.md#3.3"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-003",
+      "category": "退换货",
+      "difficulty": "easy",
+      "question": "商品有轻微破损，如何发起退换货？",
+      "expect": {
+        "answer": "可以。轻微破损商品也可发起无理由退货，但需要在退货申请中说明破损情况，平台将进行实物检验。",
+        "answerSource": [
+          "tc_policy_v3.md#3.4"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-004",
+      "category": "退换货",
+      "difficulty": "easy",
+      "question": "退货运费由谁承担？",
+      "expect": {
+        "answer": "运费由用户承担，除非商品质量问题导致的退换货，平台将承担退货运费。",
+        "answerSource": [
+          "tc_policy_v3.md#3.5"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-015",
+      "category": "退换货",
+      "difficulty": "easy",
+      "question": "商品带原包装拆除标签是否可退换？",
+      "expect": {
+        "answer": "可以。拆除商品标签但保留完整包装、配件的商品仍可退换，但若标签完全拆除影响二次销售的，将按‘有影响商品’处理，仅支持折价或维修服务。",
+        "answerSource": [
+          "tc_policy_v3.md#3.3"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-016",
+      "category": "退换货",
+      "difficulty": "easy",
+      "question": "节假日退货时间是否顺延？",
+      "expect": {
+        "answer": "可以。节假日顺延退货时间，退货申请截止日将顺延至节假日结束后第1个工作日，物流派送时间也相应顺延。",
+        "answerSource": [
+          "tc_policy_v3.md#3.2"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-017",
+      "category": "退换货",
+      "difficulty": "medium",
+      "question": "店铺自营与第三方卖家退货流程不同吗？",
+      "expect": {
+        "answer": "可以。店铺自营退货流程简化，平台直接介入质检；第三方卖家退货需先联系卖家协商，卖家确认后再平台介入，时间周期通常长1-2个工作日。",
+        "answerSource": [
+          "tc_policy_v3.md#3.1"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-018",
+      "category": "退换货",
+      "difficulty": "medium",
+      "question": "部分商品缺货如何处理退款？",
+      "expect": {
+        "answer": "可以。商品若缺货无法发货，平台将自动退款至原支付账户，退款时间3-10个工作日，若库存恢复用户可选择换货而非退款。",
+        "answerSource": [
+          "tc_policy_v3.md#3.6"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-019",
+      "category": "退换货",
+      "difficulty": "hard",
+      "question": "恶意退货（频繁退货）如何界定和处理？",
+      "expect": {
+        "answer": "可以。单笔退货金额超过平台均值3倍且周期内（90天）累计退货次数超过3次的标记为恶意退货，平台将冻结退货权限并进行人工复审，复审通过后可恢复，冻结期不少于30天。",
+        "answerSource": [
+          "tc_policy_v3.md#3.7"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-020",
+      "category": "退换货",
+      "difficulty": "hard",
+      "question": "跨境退货涉及关税如何处理？",
+      "expect": {
+        "answer": "可以。跨境退货关税由买家承担，若退货涉及关税免税政策，需提供相应证明文件，平台将在退款金额中扣除已缴关税，拒绝缴纳关税将导致包裹退回并产生双倍运费费用。",
+        "answerSource": [
+          "tc_policy_v3.md#4.5"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-021",
+      "category": "退换货",
+      "difficulty": "easy",
+      "question": "运费险覆盖范围和索赔流程？",
+      "expect": {
+        "answer": "可以。运费险覆盖正常运输过程中丢件、损坏，索赔需在签收后24小时内提交，平台将在3个工作日内审核通过并返还运费至支付账户，运费险券不可提现。",
+        "answerSource": [
+          "tc_policy_v3.md#3.8"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-022",
+      "category": "退换货",
+      "difficulty": "medium",
+      "question": "旧版政策与新版不一致如何过渡？",
+      "expect": {
+        "answer": "可以。旧版政策在效力期内仍然有效，新版政策发布后30天内旧版与新版并行过渡，期满后旧版自动失效。用户已发起的退货退款单将沿用申请时的政策版本。",
+        "answerSource": [
+          "tc_policy_v3.md#3.9"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-023",
+      "category": "退换货",
+      "difficulty": "hard",
+      "question": "商品涉及违禁品如何处理退换？",
+      "expect": {
+        "answer": "可以。涉及违禁品（烟酒、刀具、液体超过限额等）的订单一经检测发现，平台将直接冻结订单并要求用户提供合法证明，若无法提供将按违规处理并扣除订单金额，涉及违法线索将移交监管部门。",
+        "answerSource": [
+          "tc_policy_v3.md#3.10"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-024",
+      "category": "退换货",
+      "difficulty": "easy",
+      "question": "电子产品退货需要恢复出厂设置吗？",
+      "expect": {
+        "answer": "可以。电子产品退货前需恢复出厂设置并清除个人信息，若未清除个人信息导致数据泄露的，平台不承担责任，已恢复出厂设置的商品方可受理退换。",
+        "answerSource": [
+          "tc_policy_v3.md#3.11"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-025",
+      "category": "退换货",
+      "difficulty": "medium",
+      "question": "赠品缺失是否影响退货退款？",
+      "expect": {
+        "answer": "可以。赠品缺失不影响退货退款核心流程，但赠品若为限赠条件（消费满多少赠多少），满足条件未达标的，将扣除赠品价值重新计算退款金额。",
+        "answerSource": [
+          "tc_policy_v3.md#3.12"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-026",
+      "category": "退换货",
+      "difficulty": "hard",
+      "question": "诉讼时效内的证据保留与退货纠纷处理？",
+      "expect": {
+        "answer": "可以。诉讼时效为2年，用户应保留聊天记录、支付凭证、物流单号、商品照片等证据，平台将在纠纷处理期内免费存储证据180天，期满后用户需自行保存。",
+        "answerSource": [
+          "tc_policy_v3.md#3.13"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-005",
+      "category": "物流",
+      "difficulty": "easy",
+      "question": "商品什么时候能到？",
+      "expect": {
+        "answer": "商品通常在下单后3-7个工作日送达，偏远地区可能需要额外1-2个工作日，具体送达时间将在物流轨迹中实时更新。",
+        "answerSource": [
+          "tc_policy_v3.md#4.1"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-006",
+      "category": "物流",
+      "difficulty": "easy",
+      "question": "如何查询物流信息？",
+      "expect": {
+        "answer": "可以在‘我的订单’页面查看实时物流轨迹，或发送快递单号至客服微信获取状态更新，丢件/延误将在48小时内有处理结果。",
+        "answerSource": [
+          "tc_policy_v3.md#4.2"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-007",
+      "category": "物流",
+      "difficulty": "medium",
+      "question": "跨境物流需要缴纳关税吗？",
+      "expect": {
+        "answer": "需要。跨境物流需要根据目的国海关规定缴纳关税，具体金额将在订单结算页标注，若拒绝支付关税将导致包裹退回或销毁，产生的运费由用户承担。",
+        "answerSource": [
+          "tc_policy_v3.md#4.3"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-008",
+      "category": "物流",
+      "difficulty": "hard",
+      "question": "货物丢件/严重延误如何赔偿？",
+      "expect": {
+        "answer": "若货物确认丢失，平台将依据‘双倍运费+商品价值’标准赔偿，严重延误（超出承诺时间2倍）可申请退款或补发，赔偿需提交丢失证明且符合《电子商务法》相关规定。",
+        "answerSource": [
+          "tc_policy_v3.md#4.4"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-027",
+      "category": "物流",
+      "difficulty": "easy",
+      "question": "商品超重超尺如何计费？",
+      "expect": {
+        "answer": "可以。超重（超过20kg）按每超重1kg计收15元，超尺（长/宽/高和>200cm）按每次10元，重量和体积以实际测量和包装标签为准。",
+        "answerSource": [
+          "tc_policy_v3.md#4.6"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-028",
+      "category": "物流",
+      "difficulty": "easy",
+      "question": "电子产品随身携带上飞机有限额吗？",
+      "expect": {
+        "answer": "可以。单件电子产品重量不超过5kg，体积不超过20x35x20cm，并通过安检；超过限额需办理特殊运输手续并缴纳额外费用。",
+        "answerSource": [
+          "tc_policy_v3.md#4.7"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-029",
+      "category": "物流",
+      "difficulty": "medium",
+      "question": "签收后发现破损如何及时投诉？",
+      "expect": {
+        "answer": "可以。签收后24小时内在‘我的订单’提交投诉并上传破损实物照片，平台将在48小时内受理并安排赔偿，超期将不再受理。",
+        "answerSource": [
+          "tc_policy_v3.md#4.8"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-030",
+      "category": "物流",
+      "difficulty": "medium",
+      "question": "部分商品缺货延迟发货如何通知？",
+      "expect": {
+        "answer": "可以。系统将在商品延迟发货的第二天通过短信和站内信通知用户，并提供备选方案（部分发货/延后发货/取消订单退款），用户可在48小时内选择。",
+        "answerSource": [
+          "tc_policy_v3.md#4.9"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-031",
+      "category": "物流",
+      "difficulty": "hard",
+      "question": "多个仓库同步库存如何避免卖空？",
+      "expect": {
+        "answer": "可以。通过中心化库存管理系统，实时扣减可用库存，预留10%安全库存冗余，并在下单前进行库存校验，避免卖空后再补货。",
+        "answerSource": [
+          "tc_policy_v3.md#4.10"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-032",
+      "category": "物流",
+      "difficulty": "hard",
+      "question": "国际物流中断如何应急处理？",
+      "expect": {
+        "answer": "可以。若国际物流中断，平台将切换备选航线/运输方式，并第一时间通知用户，已产生的运费差价由平台承担，若延期超过15个工作日用户可申请全额退款。",
+        "answerSource": [
+          "tc_policy_v3.md#4.11"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-033",
+      "category": "物流",
+      "difficulty": "easy",
+      "question": "退货物流优选渠道如何选择？",
+      "expect": {
+        "answer": "可以。平台根据商品重量、体积和目的地，自动推荐最优物流渠道（普通邮政/快递/专线），用户也可人工指定，但特殊地区可能受渠道限制。",
+        "answerSource": [
+          "tc_policy_v3.md#4.12"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-034",
+      "category": "物流",
+      "difficulty": "medium",
+      "question": "逆向物流（退货回程）成本如何核算？",
+      "expect": {
+        "answer": "可以。退货回程运费由用户承担（运费险除外），平台根据商品重量和距离计算基准运费，如需人工上门取件，另收取取件服务费（通常15-30元）。",
+        "answerSource": [
+          "tc_policy_v3.md#4.13"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-035",
+      "category": "物流",
+      "difficulty": "medium",
+      "question": "跨境物流税号怎么获取和核验？",
+      "expect": {
+        "answer": "可以。向目的国海关申请获取税号，平台将通过第三方核验服务验证税号有效性，未验证通过的订单将限制跨境发货。",
+        "answerSource": [
+          "tc_policy_v3.md#4.14"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-036",
+      "category": "物流",
+      "difficulty": "hard",
+      "question": "物流延误赔偿标准是如何规定的？",
+      "expect": {
+        "answer": "可以。物流延误超过承诺时间的20%时，平台将按订单金额的5%赔偿，延误超过50%时按10%赔偿，最高赔偿上限为200元。",
+        "answerSource": [
+          "tc_policy_v3.md#4.15"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-037",
+      "category": "物流",
+      "difficulty": "medium",
+      "question": "国际物流保险如何购买？",
+      "expect": {
+        "answer": "可以。平台提供三种保险额度（基础/全面/超额），保费按订单金额的1%-3%计收，索赔需提供运单号、物损证明和价值证明，平台在3个工作日内审核通过。",
+        "answerSource": [
+          "tc_policy_v3.md#4.16"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-038",
+      "category": "物流",
+      "difficulty": "hard",
+      "question": "物流信息长时间不更新怎么办？",
+      "expect": {
+        "answer": "可以。若物流轨迹超过72小时未更新，用户可联系客服申请物流催办，平台将向承运方发出催办请求并在24小时内反馈处理结果；若超72小时无响应，可申请按延误处理。",
+        "answerSource": [
+          "tc_policy_v3.md#4.17"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-039",
+      "category": "物流",
+      "difficulty": "easy",
+      "question": "收货地址填错能否修改？",
+      "expect": {
+        "answer": "可以。在物流未揽收前（发货前）可在‘我的订单’页面修改收货地址；已揽收的发货后修改需联系客服尝试拦截转运，拦截转运可能产生额外费用，费用由用户承担。",
+        "answerSource": [
+          "tc_policy_v3.md#4.18"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-040",
+      "category": "物流",
+      "difficulty": "medium",
+      "question": "到货后验货的注意事项？",
+      "expect": {
+        "answer": "可以。建议当面开箱验货，检查商品数量、外观、型号是否一致，如有异常当场拒收或拍照留存；签收后24小时内发现问题仍可申请售后，但证据齐全度影响处理时效。",
+        "answerSource": [
+          "tc_policy_v3.md#4.19"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-009",
+      "category": "支付",
+      "difficulty": "easy",
+      "question": "如何查询账户余额？",
+      "expect": {
+        "answer": "可以在‘我的-钱包’页面查看当前可用余额及冻结金额，实时余额以银行系统为准，离线交易将在24小时后同步。",
+        "answerSource": [
+          "tc_payment_v1.md#2.1"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-010",
+      "category": "支付",
+      "difficulty": "easy",
+      "question": "如何进行充值？",
+      "expect": {
+        "answer": "可以在‘我的-钱包’页面点击‘充值’按钮，支持支付宝、微信银行卡三种方式，充值通常即时到账，单笔限额5万元，单日累计限额10万元。",
+        "answerSource": [
+          "tc_payment_v1.md#2.2"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-011",
+      "category": "支付",
+      "difficulty": "medium",
+      "question": "退款需要多长时间？",
+      "expect": {
+        "answer": "商品退款成功后，资金将在3-10个工作日返回原支付账户，具体时间取决于支付渠道（支付宝/微信通常1-3个工作日，银行卡可能需要5-10个工作日），资金返回后将原路退回，不可转账至他人账户。",
+        "answerSource": [
+          "tc_payment_v1.md#2.3"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-012",
+      "category": "支付",
+      "difficulty": "medium",
+      "question": "跨境支付手续费如何计算？",
+      "expect": {
+        "answer": "跨境支付手续费按照交易金额的3%计收，最低手续费5元，最高手续费50元，货币转换费另行计算（按实时汇率），若使用本币结算将免除货币转换费。",
+        "answerSource": [
+          "tc_payment_v1.md#2.4"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-013",
+      "category": "支付",
+      "difficulty": "hard",
+      "question": "资金安全如何保障？",
+      "expect": {
+        "answer": "资金存管于一级银行，采用TLS1.3加密传输、双因子认证、交易流水完整审计，资金隔离存管确保商户与平台资金不混账，并通过第三方审计机构每季度出具资金安全报告。",
+        "answerSource": [
+          "tc_payment_v1.md#2.5"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-014",
+      "category": "支付",
+      "difficulty": "hard",
+      "question": "资金流向追踪功能如何使用？",
+      "expect": {
+        "answer": "可以在‘我的-钱包-流水记录’页面查询完整交易流水，点击单条记录可查看‘资金流向图’，展示资金从支付-入账-提现的全链路状态，支持导出CSV报表用于企业账目核对。",
+        "answerSource": [
+          "tc_payment_v1.md#2.6"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-041",
+      "category": "支付",
+      "difficulty": "easy",
+      "question": "分期付款手续费如何计算？",
+      "expect": {
+        "answer": "可以。分期付款手续费按照订单金额的2%计收，最低手续费5元，最高手续费50元，每期手续费相同。",
+        "answerSource": [
+          "tc_payment_v1.md#2.7"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-042",
+      "category": "支付",
+      "difficulty": "easy",
+      "question": "跨境支付货币转换规则？",
+      "expect": {
+        "answer": "可以。跨境支付货币转换按实时汇率计算，转换费用0.5%，最低0.5元，最高5元，结算时按结算银行牌价为准。",
+        "answerSource": [
+          "tc_payment_v1.md#2.8"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-043",
+      "category": "支付",
+      "difficulty": "medium",
+      "question": "资金归集周期是多久？",
+      "expect": {
+        "answer": "可以。资金每日归集一次，T+1模式，次日将上一日的交易资金划入平台的结算账户。",
+        "answerSource": [
+          "tc_payment_v1.md#2.9"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-044",
+      "category": "支付",
+      "difficulty": "medium",
+      "question": "零售商户费率是如何定的？",
+      "expect": {
+        "answer": "可以。零售商户费率按照行业平均水平和商户历史交易额综合确定，费率区间0.38%-0.68%，年费另行收取。",
+        "answerSource": [
+          "tc_payment_v1.md#2.10"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-045",
+      "category": "支付",
+      "difficulty": "hard",
+      "question": "资金违规风控规则？",
+      "expect": {
+        "answer": "可以。资金违规包括虚假交易、刷单诱导、非法资金流向等，平台将冻结账户并启动风险调查，经查实违规的，将按交易金额的5%-20%处以罚款并移交监管部门。",
+        "answerSource": [
+          "tc_payment_v1.md#2.11"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-046",
+      "category": "支付",
+      "difficulty": "hard",
+      "question": "信用证开具和确流流程？",
+      "expect": {
+        "answer": "可以。信用证开具需提交申请、审核、开证，确流是指信用证到期付款的过程，资金由银行在到期日直接划入卖家账户，中间商不可动用。",
+        "answerSource": [
+          "tc_payment_v1.md#2.12"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-047",
+      "category": "支付",
+      "difficulty": "easy",
+      "question": "售后退款原路返回原则？",
+      "expect": {
+        "answer": "可以。退款将原路退回至用户的原支付账户（支付宝/微信/银行卡），不可转账至他人账户，也不可提现为现金。",
+        "answerSource": [
+          "tc_payment_v1.md#2.14"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-048",
+      "category": "支付",
+      "difficulty": "easy",
+      "question": "线下付款风险如何防控？",
+      "expect": {
+        "answer": "可以。线下付款风险高，平台不推荐使用，若必须使用需签署《线下付款风险告知书》，并对交易金额进行分期、留存聊天录音、预留备注备用。",
+        "answerSource": [
+          "tc_payment_v1.md#2.15"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-049",
+      "category": "支付",
+      "difficulty": "medium",
+      "question": "商户线上线下资金池管理？",
+      "expect": {
+        "answer": "可以。商户需将线上交易资金与自有资金分账，平台提供资金池API，每日自动划拨，月度对账报表必须真实反映资金流向，不得混账。",
+        "answerSource": [
+          "tc_payment_v1.md#2.16"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-050",
+      "category": "支付",
+      "difficulty": "hard",
+      "question": "资金异常流向风险预警？",
+      "expect": {
+        "answer": "可以。系统实时监测单笔异常大额交易、短时间大频繁交易、跨地区异地交易，触发风控后将冻结资金并发送风控短信，经人工复审符合规则的可解冻。",
+        "answerSource": [
+          "tc_payment_v1.md#2.17"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-051",
+      "category": "支付",
+      "difficulty": "hard",
+      "question": "支付合规体系搭建要点？",
+      "expect": {
+        "answer": "可以。合规体系包括：资金存管协议、交易风险分级、资金监管流程、定期审计报告、监管部门报备，确保资金流向合规可溯。",
+        "answerSource": [
+          "tc_payment_v1.md#2.18"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-052",
+      "category": "支付",
+      "difficulty": "easy",
+      "question": "跨境退款汇率差价如何计？",
+      "expect": {
+        "answer": "可以。跨境退款汇率差价按退款当天实时汇率计算，退款金额=原交易金额×（1-退款费率），费率包括手续费+货币转换费，差价自动退回至用户原支付账户。",
+        "answerSource": [
+          "tc_payment_v1.md#2.19"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-053",
+      "category": "支付",
+      "difficulty": "medium",
+      "question": "充值是否有最低限额？",
+      "expect": {
+        "answer": "可以。单次充值最低限额为10元，最高单笔5万元，单日累计10万元；首次充值需完成实名认证，未认证账户单次最高1000元。",
+        "answerSource": [
+          "tc_payment_v1.md#2.20"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-054",
+      "category": "支付",
+      "difficulty": "medium",
+      "question": "提现到账时间多久？",
+      "expect": {
+        "answer": "可以。提现申请实时受理，工作日15:00前提交当日到账，15:00后次日到账；节假日顺延至下一工作日，提现手续费为单笔2元。",
+        "answerSource": [
+          "tc_payment_v1.md#2.21"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-055",
+      "category": "支付",
+      "difficulty": "hard",
+      "question": "支付失败/重复扣款如何处理？",
+      "expect": {
+        "answer": "可以。支付失败时系统自动回滚订单，若出现重复扣款（如网络重试导致的多次成功），系统将在30分钟内自动识别并原路退回多余款项；未自动退回的可在‘我的-钱包-反馈’提交申诉，平台将在1个工作日内核查处理。",
+        "answerSource": [
+          "tc_payment_v1.md#2.22"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-056",
+      "category": "会员",
+      "difficulty": "easy",
+      "question": "会员积分如何获取使用？",
+      "expect": {
+        "answer": "可以。会员可通过下单获积分（订单金额的10%）、关注公众号获积分（每日5积分），积分可在‘我的-积分商城’兑换商品或抵扣现金（100积分=1元）。",
+        "answerSource": [
+          "tc_member_v1.md#2.1"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-057",
+      "category": "会员",
+      "difficulty": "easy",
+      "question": "等级体系是如何界定的？",
+      "expect": {
+        "answer": "可以。会员等级按月度消费额判定：V1（0-999元）、V2（1000-4999元）、V3（5000-19999元）、V4（20000元以上），每个等级赠送不同的权益和积分倍率。",
+        "answerSource": [
+          "tc_member_v1.md#2.2"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-058",
+      "category": "会员",
+      "difficulty": "medium",
+      "question": "会员权益冻结原因？",
+      "expect": {
+        "answer": "可以。会员权益因违规退款（3次以上）、恶意差评（3次以上）、账户安全风险（疑似盗刷）将被冻结，冻结期30天，冻结期间权益暂停，可申诉复核。",
+        "answerSource": [
+          "tc_member_v1.md#2.3"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-059",
+      "category": "会员",
+      "difficulty": "medium",
+      "question": "跨店铺会员权益是否通用？",
+      "expect": {
+        "answer": "可以。V3及以上等级的会员权益可跨店铺使用，需在‘我的-权益’页手动激活，跨店铺使用需满足商品属性匹配条件。",
+        "answerSource": [
+          "tc_member_v1.md#2.4"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-060",
+      "category": "会员",
+      "difficulty": "hard",
+      "question": "会员数据脱敏与隐私保护？",
+      "expect": {
+        "answer": "可以。会员个人信息（姓名、电话、地址）加密存储，支付数据（卡号、银行账号）永不出库，访问日志自动脱敏，符合《个人信息保护法》及《网络安全法》要求。",
+        "answerSource": [
+          "tc_member_v1.md#2.5"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-061",
+      "category": "会员",
+      "difficulty": "hard",
+      "question": "会员权益纠纷如何调解？",
+      "expect": {
+        "answer": "可以。双方可在‘我的-客服’发起调解，平台将在48小时内介入，调解结果为‘维权成功’的退还权益；调解结果为‘各退各的’，双方权益各退一半。",
+        "answerSource": [
+          "tc_member_v1.md#2.6"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-062",
+      "category": "会员",
+      "difficulty": "easy",
+      "question": "积分过期规则",
+      "expect": {
+        "answer": "可以。会员积分有效期为累积之日起12个月，逾期自动清零，不可延长、不可转赠至他人账户。",
+        "answerSource": [
+          "tc_member_v1.md#2.7"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-063",
+      "category": "会员",
+      "difficulty": "medium",
+      "question": "会员生日权益如何领取？",
+      "expect": {
+        "answer": "可以。会员在生日月可领取‘生日大礼包’，包含5%优惠券+500积分+生日祝福短信，需在生日前7天在‘我的-设置’页申领，逾期作废。",
+        "answerSource": [
+          "tc_member_v1.md#2.8"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-064",
+      "category": "会员",
+      "difficulty": "medium",
+      "question": "分级营销权益如何推送？",
+      "expect": {
+        "answer": "可以。平台根据会员等级和购买历史，每周推送1-2次精准营销短信/站内信，未满18周岁会员默认不接收营销短信，可在设置页取消勾选。",
+        "answerSource": [
+          "tc_member_v1.md#2.9"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-065",
+      "category": "会员",
+      "difficulty": "hard",
+      "question": "会员数据大屏展示指标？",
+      "expect": {
+        "answer": "可以。大屏展示月活用户数、均单价、复购率、留存率、等级分布、消费热点商品TOP20，数据延迟1天，用于运营决策和精准营销。",
+        "answerSource": [
+          "tc_member_v1.md#2.10"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-066",
+      "category": "会员",
+      "difficulty": "hard",
+      "question": "老会员权益保留政策？",
+      "expect": {
+        "answer": "可以。老会员（连续消费6个月以上）的原有权益在等级升级时保留，新等级额外叠加权益，权益叠加不冲突，但超期未使用的权益将自动失效。",
+        "answerSource": [
+          "tc_member_v1.md#2.11"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-067",
+      "category": "会员",
+      "difficulty": "easy",
+      "question": "会员等级如何升级？",
+      "expect": {
+        "answer": "可以。会员等级在满足当月消费金额门槛后次月1日自动升级，无需手动申请；等级有效期为12个月，期内消费额不足将降级至对应等级。",
+        "answerSource": [
+          "tc_member_v1.md#2.12"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-068",
+      "category": "会员",
+      "difficulty": "medium",
+      "question": "会员专属优惠券如何领取？",
+      "expect": {
+        "answer": "可以。会员可在‘我的-权益中心’领取每月专属优惠券（V1每月1张5元券，V4每月4张20元券），当月未领取自动作废，不可转赠。",
+        "answerSource": [
+          "tc_member_v1.md#2.13"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-069",
+      "category": "会员",
+      "difficulty": "medium",
+      "question": "会员退会/注销流程？",
+      "expect": {
+        "answer": "可以。会员可在‘我的-账户安全’发起注销，注销后30天冷静期内可撤销；冷静期过后账户正式注销，积分清零且不可恢复，注销申请需通过短信验证码确认。",
+        "answerSource": [
+          "tc_member_v1.md#2.14"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-070",
+      "category": "会员",
+      "difficulty": "hard",
+      "question": "会员权益与促销叠加规则？",
+      "expect": {
+        "answer": "可以。会员折扣与满减券可叠加，会员折扣与秒杀价不可叠加（取更优）；积分抵扣可与会员折扣叠加但不可与第三方优惠券叠加，叠加后实付金额不得低于0元。",
+        "answerSource": [
+          "tc_member_v1.md#2.15"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-071",
+      "category": "其他",
+      "difficulty": "easy",
+      "question": "系统维护期间服务是否中断？",
+      "expect": {
+        "answer": "可以。系统例行维护为每周日凌晨3:00-5:00，期间部分功能（下单、支付）将暂停10分钟，紧急修复不计维护时间，维护完成后将发布维护公告。",
+        "answerSource": [
+          "tc_operation_v1.md#3.1"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-072",
+      "category": "其他",
+      "difficulty": "easy",
+      "question": "常见技术异常码含义？",
+      "expect": {
+        "answer": "可以。常见异常码：400-参数错误、500-系统内部错误、503-服务不可用、504-网关超时，具体含义请参照《技术异常码手册》。",
+        "answerSource": [
+          "tc_operation_v1.md#3.2"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-073",
+      "category": "其他",
+      "difficulty": "medium",
+      "question": "API调用频率限制是如何设置？",
+      "expect": {
+        "answer": "可以。单用户单接口每秒限制10次，单接口总频率每分钟不超过100次，超限将返回429状态码并记录日志，长期超限将冻结接口调用权限。",
+        "answerSource": [
+          "tc_operation_v1.md#3.3"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-074",
+      "category": "其他",
+      "difficulty": "medium",
+      "question": "跨系统数据接口联调如何测试？",
+      "expect": {
+        "answer": "可以。使用测试环境而非生产环境，提供Mock测试数据，校验响应字段、响应时间、异常码，联调结束后需进行安全审计和性能压力测试。",
+        "answerSource": [
+          "tc_operation_v1.md#3.4"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-075",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "数据灾备备份恢复时间？",
+      "expect": {
+        "answer": "可以。双机热备份，故障自动切换用时<5分钟，人工恢复备份需2-4小时，最近1天的交易数据可恢复，超过1天的数据需提工单申请。",
+        "answerSource": [
+          "tc_operation_v1.md#3.5"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-076",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "安全审计日志保存时效？",
+      "expect": {
+        "answer": "可以。日志按天分库存储，保存180天在线查询，180-365天归档至冷存储，超过365天销毁，所有日志必须脱敏处理（脱敏字段：手机号后4位、银行卡后4位、真实姓名）。",
+        "answerSource": [
+          "tc_operation_v1.md#3.6"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-077",
+      "category": "其他",
+      "difficulty": "easy",
+      "question": "系统升级不影响数据的措施？",
+      "expect": {
+        "answer": "可以。系统升级采用蓝绿部署，旧版实例保留回滚能力，数据库增量备份前置，升级完成后自动健康检查通过方可切换流量。",
+        "answerSource": [
+          "tc_operation_v1.md#3.7"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-078",
+      "category": "其他",
+      "difficulty": "medium",
+      "question": "权限管理角色如何分配？",
+      "expect": {
+        "answer": "可以。角色权限遵循最小权限原则，超级管理员拥有全权，业务角色仅具备模块增删改查权，系统管理员仅具备配置权限，禁止直接操作生产数据。",
+        "answerSource": [
+          "tc_operation_v1.md#3.8"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-079",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "日志链路追踪全链路？",
+      "expect": {
+        "answer": "可以。使用统一链路ID（trace_id），贯穿用户下单-支付-物流的全过程，支持在日志系统检索、查看每个环节的请求参数、返回结果、耗时情况。",
+        "answerSource": [
+          "tc_operation_v1.md#3.9"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    },
+    {
+      "id": "KB-080",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "容灾演练频率和内容？",
+      "expect": {
+        "answer": "可以。每季度一次容灾演练，内容包括故障切换演练、数据恢复演练、业务中断应急演练，演练结束后需提交演练报告并改进应急预案。",
+        "answerSource": [
+          "tc_operation_v1.md#3.10"
+        ],
+        "shouldAnswer": true,
+        "confidenceFloor": 0.8
+      }
+    }
+  ]
+}
