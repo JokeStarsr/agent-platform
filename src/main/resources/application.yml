@@ -1,6 +1,6 @@
 app:
   rag:
-    enabled: false        # 配置好 ZHIPUAI_API_KEY 后改为 true，启用 RAG 服务
+    enabled: true        # ZHIPUAI_API_KEY 已配置，启用 RAG 服务
 
 server:
   port: 8080
@@ -10,6 +10,13 @@ spring:
     name: agent-platform
 
   ai:
+    # Spring AI 1.0.0 模型选择器：同时存在多模型时必配，否则多个 ChatModel/EmbeddingModel bean 冲突
+    model:
+      # 模型选择器：不设则智谱三个自动配置（chat/embedding/image）都会 explode，空 key 启动即失败
+      chat: openai            # ChatModel 只用 OpenAI（对接 DeepSeek，OpenAI 兼容协议）
+      embedding: zhipuai      # EmbeddingModel 用智谱（RAG 向量化）
+      image: openai           # 禁用智谱 image（未配 key 时 zhiPuAiImageModel 会拒绝启动）
+
     # L6 模型服务：DeepSeek（OpenAI 兼容协议）
     # 若改用 sub2api 网关，base-url 换成 http://localhost:8180/v1 即可
     openai:
@@ -21,15 +28,10 @@ spring:
           max-tokens: 4096
           temperature: 0.7
           stream-usage: true
-      # 禁用 OpenAI 侧 embedding，保证全应用仅一个 EmbeddingModel bean（zhipuai）
-      embedding:
-        enabled: false
 
-    # 智谱 Embedding（RAG 向量化用）；禁用其 chat，保证全应用仅一个 ChatModel bean（openai）
+    # 智谱 Embedding（RAG 向量化用）
     zhipuai:
-      api-key: ${ZHIPUAI_API_KEY:}
-      chat:
-        enabled: false
+      api-key: ${ZHIPUAI_API_KEY:123e12021bfa403da1dd7223abd60cdc.UgYT7262gypbIml8}
 
     vectorstore:
       pgvector:

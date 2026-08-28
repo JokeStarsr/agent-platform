@@ -1,6 +1,7 @@
 package com.agent.capability;
 
 import com.agent.common.Result;
+import com.agent.model.llm.LlmGateway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
@@ -25,9 +26,11 @@ public class RagService {
 
     private final VectorStore vectorStore;
     private final TokenTextSplitter splitter = new TokenTextSplitter();
+    private final LlmGateway llmGateway;
 
-    public RagService(VectorStore vectorStore) {
+    public RagService(VectorStore vectorStore, LlmGateway llmGateway) {
         this.vectorStore = vectorStore;
+        this.llmGateway = llmGateway;
     }
 
     /** 文档入库：Tika 解析 → 语义切块 → 向量化写入（租户打标） */
@@ -87,6 +90,18 @@ public class RagService {
         } catch (Exception e) {
             log.error("RAG在线检索失败: query={}, tenantId={}, ex={}", query, tenantId, e.getMessage(), e);
             return Result.error(500, "RAG检索服务异常: " + e.getMessage());
+        }
+    }
+
+    /** 按租户清空其知识库切片（评测重置用） */
+    public Result<Void> delete(String tenantId) {
+        try {
+            FilterExpressionBuilder b = new FilterExpressionBuilder();
+            vectorStore.delete(b.eq("tenant_id", tenantId).build());
+            return Result.ok();
+        } catch (Exception e) {
+            log.error("按租户清空知识库失败: tenantId={}, ex={}", tenantId, e.getMessage(), e);
+            return Result.error(500, "清空知识库失败: " + e.getMessage());
         }
     }
 
@@ -186,11 +201,9 @@ public class RagService {
                 "5. 对输出内容进行安全过滤，拒绝生成违法、歧视、虚假信息。\n";
     }
 
-    /** LLM生成占位符 */
+    /** 经 L6 LLM 网关生成答案（OpenAI 兼容协议 → DeepSeek） */
     private String llmGatewayGenerate(String system, String user) {
-        // 实际项目中应注入LlmGateway并调用
-        // 此处返回占位符，实际部署时替换为真实调用
-        return "【占位符】LLM生成答案（实际部署时通过LlmGateway调用DeepSeek）";
+        return llmGateway.generate(system, user);
     }
 
     /** 辅助类：检索结果切片 */
