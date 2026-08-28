@@ -28,6 +28,12 @@ logs/
 *.log
 tmp/
 
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
 # 系统
 .DS_Store
 Thumbs.db
