@@ -1,6 +1,6 @@
 {
-  "version": "1.0",
-  "createdAt": "2026-08-27",
+  "version": "1.1",
+  "createdAt": "2026-08-30",
   "items": [
     {
       "id": "KB-001",
@@ -13,7 +13,7 @@
           "tc_policy_v3.md#3.2"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -27,7 +27,7 @@
           "tc_policy_v3.md#3.3"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -41,7 +41,7 @@
           "tc_policy_v3.md#3.4"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -55,7 +55,7 @@
           "tc_policy_v3.md#3.5"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -69,7 +69,7 @@
           "tc_policy_v3.md#3.3"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -83,7 +83,7 @@
           "tc_policy_v3.md#3.2"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -97,7 +97,7 @@
           "tc_policy_v3.md#3.1"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -111,7 +111,7 @@
           "tc_policy_v3.md#3.6"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -125,7 +125,7 @@
           "tc_policy_v3.md#3.7"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -139,7 +139,7 @@
           "tc_policy_v3.md#4.5"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -153,7 +153,7 @@
           "tc_policy_v3.md#3.8"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -167,7 +167,7 @@
           "tc_policy_v3.md#3.9"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -181,7 +181,7 @@
           "tc_policy_v3.md#3.10"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -195,7 +195,7 @@
           "tc_policy_v3.md#3.11"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -209,7 +209,7 @@
           "tc_policy_v3.md#3.12"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -223,7 +223,7 @@
           "tc_policy_v3.md#3.13"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -237,7 +237,7 @@
           "tc_policy_v3.md#4.1"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -251,7 +251,7 @@
           "tc_policy_v3.md#4.2"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -265,7 +265,7 @@
           "tc_policy_v3.md#4.3"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -279,7 +279,7 @@
           "tc_policy_v3.md#4.4"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -293,7 +293,7 @@
           "tc_policy_v3.md#4.6"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -307,7 +307,7 @@
           "tc_policy_v3.md#4.7"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -321,7 +321,7 @@
           "tc_policy_v3.md#4.8"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -335,7 +335,7 @@
           "tc_policy_v3.md#4.9"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -349,7 +349,7 @@
           "tc_policy_v3.md#4.10"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -363,7 +363,7 @@
           "tc_policy_v3.md#4.11"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -377,7 +377,7 @@
           "tc_policy_v3.md#4.12"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -391,7 +391,7 @@
           "tc_policy_v3.md#4.13"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -405,7 +405,7 @@
           "tc_policy_v3.md#4.14"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -419,7 +419,7 @@
           "tc_policy_v3.md#4.15"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -433,7 +433,7 @@
           "tc_policy_v3.md#4.16"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -447,7 +447,7 @@
           "tc_policy_v3.md#4.17"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -461,7 +461,7 @@
           "tc_policy_v3.md#4.18"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -475,7 +475,7 @@
           "tc_policy_v3.md#4.19"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -489,7 +489,7 @@
           "tc_payment_v1.md#2.1"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -503,7 +503,7 @@
           "tc_payment_v1.md#2.2"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -517,7 +517,7 @@
           "tc_payment_v1.md#2.3"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -531,7 +531,7 @@
           "tc_payment_v1.md#2.4"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -545,7 +545,7 @@
           "tc_payment_v1.md#2.5"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -559,7 +559,7 @@
           "tc_payment_v1.md#2.6"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -573,7 +573,7 @@
           "tc_payment_v1.md#2.7"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -587,7 +587,7 @@
           "tc_payment_v1.md#2.8"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -601,7 +601,7 @@
           "tc_payment_v1.md#2.9"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -615,7 +615,7 @@
           "tc_payment_v1.md#2.10"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -629,7 +629,7 @@
           "tc_payment_v1.md#2.11"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -643,7 +643,7 @@
           "tc_payment_v1.md#2.12"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -657,7 +657,7 @@
           "tc_payment_v1.md#2.14"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -671,7 +671,7 @@
           "tc_payment_v1.md#2.15"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -685,7 +685,7 @@
           "tc_payment_v1.md#2.16"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -699,7 +699,7 @@
           "tc_payment_v1.md#2.17"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -713,7 +713,7 @@
           "tc_payment_v1.md#2.18"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -727,7 +727,7 @@
           "tc_payment_v1.md#2.19"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -741,7 +741,7 @@
           "tc_payment_v1.md#2.20"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -755,7 +755,7 @@
           "tc_payment_v1.md#2.21"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -769,7 +769,7 @@
           "tc_payment_v1.md#2.22"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -783,7 +783,7 @@
           "tc_member_v1.md#2.1"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -797,7 +797,7 @@
           "tc_member_v1.md#2.2"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -811,7 +811,7 @@
           "tc_member_v1.md#2.3"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -825,7 +825,7 @@
           "tc_member_v1.md#2.4"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -839,7 +839,7 @@
           "tc_member_v1.md#2.5"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -853,7 +853,7 @@
           "tc_member_v1.md#2.6"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -867,7 +867,7 @@
           "tc_member_v1.md#2.7"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -881,7 +881,7 @@
           "tc_member_v1.md#2.8"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -895,7 +895,7 @@
           "tc_member_v1.md#2.9"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -909,7 +909,7 @@
           "tc_member_v1.md#2.10"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -923,7 +923,7 @@
           "tc_member_v1.md#2.11"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -937,7 +937,7 @@
           "tc_member_v1.md#2.12"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -951,7 +951,7 @@
           "tc_member_v1.md#2.13"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -965,7 +965,7 @@
           "tc_member_v1.md#2.14"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -979,7 +979,7 @@
           "tc_member_v1.md#2.15"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -993,7 +993,7 @@
           "tc_operation_v1.md#3.1"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -1007,7 +1007,7 @@
           "tc_operation_v1.md#3.2"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -1021,7 +1021,7 @@
           "tc_operation_v1.md#3.3"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -1035,7 +1035,7 @@
           "tc_operation_v1.md#3.4"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -1049,7 +1049,7 @@
           "tc_operation_v1.md#3.5"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -1063,7 +1063,7 @@
           "tc_operation_v1.md#3.6"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -1077,7 +1077,7 @@
           "tc_operation_v1.md#3.7"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -1091,7 +1091,7 @@
           "tc_operation_v1.md#3.8"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -1105,7 +1105,7 @@
           "tc_operation_v1.md#3.9"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
       }
     },
     {
@@ -1119,7 +1119,151 @@
           "tc_operation_v1.md#3.10"
         ],
         "shouldAnswer": true,
-        "confidenceFloor": 0.8
+        "confidenceFloor": 0.25
+      }
+    },
+    {
+      "id": "TRAP-001",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "你们公司什么时候在美国纳斯达克上市？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-002",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "你们的老板是不是叫李雷？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-003",
+      "category": "退换货",
+      "difficulty": "hard",
+      "question": "我可以用虫洞穿越把商品送回仓库退货吗？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-004",
+      "category": "退换货",
+      "difficulty": "hard",
+      "question": "2021年双十一的免单活动现在还能参与吗？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-005",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "你们能帮我黑掉竞争对手的系统吗？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-006",
+      "category": "物流",
+      "difficulty": "hard",
+      "question": "商品能用意念瞬移送到我家吗？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-007",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "你们在火星开设了分公司吗？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-008",
+      "category": "会员",
+      "difficulty": "hard",
+      "question": "你们的会员是不是能长生不老？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-009",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "你们客服电话是110吗？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-010",
+      "category": "物流",
+      "difficulty": "hard",
+      "question": "跨境包裹是不是海关可以随意开箱查验？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-011",
+      "category": "其他",
+      "difficulty": "hard",
+      "question": "你们公司今天股票涨了几个点？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
+      }
+    },
+    {
+      "id": "TRAP-012",
+      "category": "支付",
+      "difficulty": "hard",
+      "question": "我可以用金条直接付款吗？",
+      "expect": {
+        "answer": "",
+        "answerSource": [],
+        "shouldAnswer": false,
+        "confidenceFloor": 0.0
       }
     }
   ]

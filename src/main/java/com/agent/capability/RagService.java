@@ -4,6 +4,7 @@ import com.agent.common.Result;
 import com.agent.model.llm.LlmGateway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -25,6 +26,23 @@ public class RagService {
 
     private final VectorStore vectorStore;
     private final LlmGateway llmGateway;
+
+    // L5 转人工门控配置：置信度门控 + 转人工标记（P1 收口，对应 docs/design/api/20260830-handoff-mechanism.md）
+    @Value("${app.rag.handoff.threshold:0.50}")
+    private double handoffThreshold = 0.50;
+    @Value("${app.rag.handoff.w-retrieval:0.55}")
+    private double wRetrieval = 0.55;
+    @Value("${app.rag.handoff.w-coverage:0.25}")
+    private double wCoverage = 0.25;
+    @Value("${app.rag.handoff.w-citation:0.20}")
+    private double wCitation = 0.20;
+    // 拒答信号（2026-08-30 三轮校准）：仅"完全缺失答案"的真拒答/内容安全拒答。
+    // 覆盖：我不知道/无法回答/无法确认/没有找到/并未包含任何（通用）+ 无法提供任何/拒绝生成（内容安全拒答）。
+    // 排除：建议转人工（好答案收尾）、无法提供（好答案对子部分的缺口说明，如 KB-023"无法提供该部分信息"）
+    private static final List<String> REFUSAL_SIGNALS = List.of(
+            "我不知道", "无法回答", "无法确定", "不能回答", "不清楚", "无法确认",
+            "没有找到", "没有关于", "没有相关信息", "并未包含任何", "无法判断",
+            "无法提供任何", "拒绝回答", "拒绝生成", "拒绝提供");
 
     public RagService(VectorStore vectorStore, LlmGateway llmGateway) {
         this.vectorStore = vectorStore;
@@ -195,7 +213,66 @@ public class RagService {
                 .map(ScoredChunk::getContent)
                 .collect(Collectors.toList());
 
-        return new RagResult(answer, citations, sourceChunks);
+        RagResult result = new RagResult(answer, citations, sourceChunks);
+        computeHandoff(result, selectedChunks, query, answer);
+        return result;
+    }
+
+    /** 置信度门控 + 转人工标记（对应 docs/design/api/20260830-handoff-mechanism.md §2）
+     *  纯启发式合成，零额外 LLM 调用：检索相似度*0.55 + 关键词覆盖*0.25 + 引用完整率*0.20。
+     */
+    private void computeHandoff(RagResult result, List<ScoredChunk> selectedChunks, String query, String answer) {
+        double retrievalScore = selectedChunks.isEmpty()
+                ? 0.0 : Math.max(0.0, Math.min(1.0,
+                selectedChunks.stream().mapToDouble(ScoredChunk::getScore).max().orElse(0.0)));
+        double coverageScore = selectedChunks.isEmpty() ? 0.0 : coverageScore(query, selectedChunks.get(0).getContent());
+        double citationScore = (answer != null && answer.matches(".*【[\\d.]+】.*")) ? 1.0 : 0.0;
+
+        double confidence = wRetrieval * retrievalScore + wCoverage * coverageScore + wCitation * citationScore;
+        confidence = Math.max(0.0, Math.min(1.0, confidence));
+
+        boolean noRetrieval = selectedChunks.isEmpty();
+        boolean refused = hasRefusalSignal(answer);
+        boolean needsHandoff = noRetrieval || refused || confidence < handoffThreshold;
+        String reason = noRetrieval ? "NO_RETRIEVAL"
+                : (refused ? "REFUSAL"
+                : (confidence < handoffThreshold ? "LOW_CONFIDENCE" : "NONE"));
+
+        result.setConfidenceScore(confidence);
+        result.setNeedsHandoff(needsHandoff);
+        result.setHandoffReason(reason);
+    }
+
+    /** 查询关键词在切片中的 bigram 覆盖率（中文以字为单位成对） */
+    private double coverageScore(String query, String chunkText) {
+        Set<String> q = charBigrams(query);
+        if (q.isEmpty()) return 0.0;
+        Set<String> c = charBigrams(chunkText);
+        if (c.isEmpty()) return 0.0;
+        int overlap = 0;
+        for (String bg : q) {
+            if (c.contains(bg)) overlap++;
+        }
+        return (double) overlap / q.size();
+    }
+
+    private Set<String> charBigrams(String text) {
+        String norm = text.toLowerCase().replaceAll("\\s+", "");
+        Set<String> set = new HashSet<>();
+        for (int i = 0; i < norm.length() - 1; i++) {
+            set.add(norm.substring(i, i + 2));
+        }
+        return set;
+    }
+
+    /** 答案是否带拒答/建议转人工信号 */
+    private boolean hasRefusalSignal(String answer) {
+        if (answer == null || answer.isEmpty()) return true;
+        String lower = answer.toLowerCase();
+        for (String s : REFUSAL_SIGNALS) {
+            if (lower.contains(s.toLowerCase())) return true;
+        }
+        return false;
     }
 
     /** 系统Prompt */
@@ -253,6 +330,9 @@ public class RagService {
         private List<String> citations; // 引用列表 【1】 【2】 ...
         private List<String> sourceChunks; // 使用的切片内容
         private int latencyMs;          // 响应延迟 ms
+        private double confidenceScore = 0.0; // L5 转人工门控：合成置信度 0-1
+        private boolean needsHandoff = false; // 是否建议转人工
+        private String handoffReason = "NONE"; // NONE / NO_RETRIEVAL / REFUSAL / LOW_CONFIDENCE
 
         public RagResult() {
         }
@@ -304,6 +384,30 @@ public class RagService {
 
         public void setLatencyMs(int latencyMs) {
             this.latencyMs = latencyMs;
+        }
+
+        public double getConfidenceScore() {
+            return confidenceScore;
+        }
+
+        public void setConfidenceScore(double confidenceScore) {
+            this.confidenceScore = confidenceScore;
+        }
+
+        public boolean isNeedsHandoff() {
+            return needsHandoff;
+        }
+
+        public void setNeedsHandoff(boolean needsHandoff) {
+            this.needsHandoff = needsHandoff;
+        }
+
+        public String getHandoffReason() {
+            return handoffReason;
+        }
+
+        public void setHandoffReason(String handoffReason) {
+            this.handoffReason = handoffReason;
         }
 
         public static RagResult ok(String answer) {

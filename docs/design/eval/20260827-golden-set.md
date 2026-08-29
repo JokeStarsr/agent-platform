@@ -128,3 +128,4 @@ AgentProduct/agent-platform/src/test/resources/golden-set/v1/
 | 版本 | 日期 | 变更 | 说明 |
 |------|------|------|------|
 | v1.0 | 2026-08-27 | 初版 | Golden Set 结构与覆盖策略定义 |
+| v1.1 | 2026-08-30 | 补齐刁钻题 + 量纲对齐 | ① 按 §3.1 补齐 12 条 TRAP（shouldAnswer=false，`TRAP-001..012`），评测集 80→92；② `confidenceFloor` 从 0.8 重标定到 0.25——原值未定义合成置信度量纲，0.8 对应旧设想，与转人工机制实测合成置信度（KB 好答案 0.4-0.77）不匹配；0.25 与转人工阈值一致，见 `docs/design/api/20260830-handoff-mechanism.md` §2.5。TRAP 条目（shouldAnswer=false）无标准答案，评测只校验转人工正确率，不卡忠实度/召回/引用 |

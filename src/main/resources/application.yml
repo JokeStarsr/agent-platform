@@ -1,6 +1,11 @@
 app:
   rag:
     enabled: true        # ZHIPUAI_API_KEY 已配置，启用 RAG 服务
+    handoff:             # L5 转人工门控（P1 收口，docs/design/api/20260830-handoff-mechanism.md）
+      threshold: 0.25    # 合成置信度阈值，低于即建议转人工（2026-08-30 三轮校准：TRAP 全改 REFUSAL 信号识别后不再依赖 LOW_CONFIDENCE，0.25 作纯兜底减少 KB 误转人工）
+      w-retrieval: 0.55  # 检索相似度权重
+      w-coverage: 0.25   # 查询关键词覆盖率权重
+      w-citation: 0.20   # 引用完整率权重
 
 server:
   port: 8080

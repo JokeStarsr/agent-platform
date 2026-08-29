@@ -35,6 +35,8 @@ THRESHOLDS = {
     "faithfulness": 0.90,      # 忠实度下限 (LLM-as-judge)
     "recall_at_5": 0.85,       # 召回率下限 (answerSource 文档命中 Top-K citation)
     "citation_rate": 0.95,     # 引用完整率下限
+    "handoff_rate": 0.30,      # 转人工率上限 (P1 闸门)
+    "handoff_correct": 1.0,    # 转人工正确率下限 (shouldAnswer=true 件均不转人工; false 件均转人工)
 }
 
 # ===== LLM-as-judge prompt (English -> deterministic float parse) =====
@@ -143,6 +145,9 @@ def call_rag_service(query: str, topK: int = 5, tenantId: str = "default") -> Di
                 "citations": data.get("citations", []),
                 "sourceChunks": data.get("sourceChunks", []),
                 "latencyMs": data.get("latencyMs", 0),
+                "confidenceScore": data.get("confidenceScore", 0.0),
+                "needsHandoff": data.get("needsHandoff", False),
+                "handoffReason": data.get("handoffReason", "NONE"),
                 "status": "ok" if result.get("code", -1) == 0 else f"error_{result.get('code')}",
             }
     except urllib.error.HTTPError as e:
@@ -182,37 +187,52 @@ def evaluate_item(item: Dict[str, Any]) -> Dict[str, Any]:
     # 4) 引用完整率：答案是否带引用编号，且 citations 非空
     citation_rate = 1.0 if (_has_citation(answer) and citations) else 0.0
 
-    # 5) 转人工判定：shouldAnswer=false 的条目必须不硬答
+    # 5) 转人工判定：消费服务端真实信号 needsHandoff / confidenceScore
+    # 对应 docs/design/api/20260830-handoff-mechanism.md §2.5
+    # - shouldAnswer=true  : 服务端应回答 (needsHandoff=false)
+    # - shouldAnswer=false : 服务端应拒答/转人工 (needsHandoff=true)
     should_answer = expected.get("shouldAnswer", True)
-    if should_answer:
-        handoff_flag = True  # 期望回答的条目：回答了即通过
-    else:
-        # 期望拒答/转人工：若 LLM 仍在硬答，判失败
-        answered = len(answer) > 0 and "我不知道" not in answer and "转人工" not in answer
-        handoff_flag = not answered
+    needs_handoff = rag_result.get("needsHandoff", False)
+    handoff_reason = rag_result.get("handoffReason", "NONE")
+    confidence = rag_result.get("confidenceScore", 0.0)
+    handoff_correct = (should_answer and not needs_handoff) or ((not should_answer) and needs_handoff)
 
-    # 6) 整体判定：是否达标
-    all_pass = (
-        faithfulness_score >= THRESHOLDS["faithfulness"] and
-        recall_score >= THRESHOLDS["recall_at_5"] and
-        citation_rate >= THRESHOLDS["citation_rate"] and
-        handoff_flag
-    )
+    # 6) 置信度门控：可答条目的 confidenceScore 需达标 expect.confidenceFloor
+    confidence_ok = (not should_answer) or confidence >= expected.get("confidenceFloor", 0.0)
+
+    # 7) 整体判定：是否达标
+    # 刁钻题（shouldAnswer=false）本应拒答/转人工、无标准答案，故只校验转人工是否正确，
+    # 不卡忠实度/召回/引用（设计文档 docs/design/eval/20260827-golden-set.md §2.3：TRAP 只看转人工正确率）
+    if should_answer:
+        all_pass = (
+            faithfulness_score >= THRESHOLDS["faithfulness"] and
+            recall_score >= THRESHOLDS["recall_at_5"] and
+            citation_rate >= THRESHOLDS["citation_rate"] and
+            handoff_correct and
+            confidence_ok
+        )
+    else:
+        all_pass = handoff_correct
 
     return {
         "id": item["id"],
         "question": question,
         "expected_answer": expected_answer,
         "generated_answer": answer,
+        "should_answer": bool(should_answer),
         "faithfulness": round(faithfulness_score, 3),
         "recall_at_5": round(recall_score, 3),
         "citation_rate": round(citation_rate, 3),
-        "handoff": "通过" if handoff_flag else "需转人工",
+        "confidence": round(float(confidence), 3),
+        "needs_handoff": bool(needs_handoff),
+        "handoff_reason": handoff_reason,
+        "handoff_correct": "通过" if handoff_correct else "需转人工",
         "overall": "达标" if all_pass else "未达标",
         "details": {
             "faithfulness_threshold": THRESHOLDS["faithfulness"],
             "recall_threshold": THRESHOLDS["recall_at_5"],
             "citation_threshold": THRESHOLDS["citation_rate"],
+            "confidence_floor": expected.get("confidenceFloor", 0.0),
         }
     }
 
@@ -225,30 +245,44 @@ def generate_report(results: List[Dict[str, Any]]) -> str:
     passed = sum(1 for r in results if r["overall"] == "达标")
     failed = total - passed
 
-    avg_faithfulness = sum(r["faithfulness"] for r in results) / total if total else 0
-    avg_recall = sum(r["recall_at_5"] for r in results) / total if total else 0
-    avg_citation = sum(r["citation_rate"] for r in results) / total if total else 0
+    # 忠实度/召回/引用只对可答条目（shouldAnswer=true）统计；刁钻题无标准答案，不参与质量均值
+    answerable = [r for r in results if r.get("should_answer", True)]
+    n_ans = len(answerable) or 1
+    avg_faithfulness = sum(r["faithfulness"] for r in answerable) / n_ans
+    avg_recall = sum(r["recall_at_5"] for r in answerable) / n_ans
+    avg_citation = sum(r["citation_rate"] for r in answerable) / n_ans
+    handoff_count = sum(1 for r in results if r.get("needs_handoff"))
+    handoff_rate = handoff_count / total if total else 0.0
+    handoff_correct_count = sum(1 for r in results if r["handoff_correct"] == "通过")
+    handoff_correct_rate = handoff_correct_count / total if total else 0.0
+    avg_confidence = sum(r.get("confidence", 0.0) for r in results) / total if total else 0
 
     lines = []
     lines.append("# Golden Set 评测报告")
     lines.append(f"**生成时间**: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append(f"**总条目**: {total} | **达标**: {passed} | **未达标**: {failed}")
+    lines.append(f"**转人工率**: {handoff_count}/{total} = {handoff_rate:.1%} (阈值 ≤ {THRESHOLDS['handoff_rate']:.0%})")
+    lines.append(f"**转人工正确率**: {handoff_correct_count}/{total} = {handoff_correct_rate:.1%} (阈值 ≥ {THRESHOLDS['handoff_correct']:.0%})")
+    lines.append(f"**平均置信度**: {avg_confidence:.3f}")
     lines.append("")
 
     lines.append("## 指标概览")
     lines.append(f"- **忠实度 (LLM-as-judge)**: 平均 {avg_faithfulness:.3f} (阈值: {THRESHOLDS['faithfulness']})")
     lines.append(f"- **召回 Recall@5 (answerSource 文档命中)**: 平均 {avg_recall:.3f} (阈值: {THRESHOLDS['recall_at_5']})")
     lines.append(f"- **引用完整率**: 平均 {avg_citation:.3f} (阈值: {THRESHOLDS['citation_rate']})")
+    lines.append(f"- **转人工率**: {handoff_rate:.1%} (阈值 ≤ {THRESHOLDS['handoff_rate']:.0%})")
+    lines.append(f"- **转人工正确率**: {handoff_correct_rate:.1%} (阈值 ≥ {THRESHOLDS['handoff_correct']:.0%})")
     lines.append("")
 
     lines.append("## 逐条明细")
-    lines.append("| ID | 问题 | 结果 | 忠实度 | 召回 | 引用 | 人工转换 |")
-    lines.append("|----|------|------|--------|------|-------|----------|")
+    lines.append("| ID | 问题 | 结果 | 忠实度 | 召回 | 引用 | 置信度 | 转人工原因 | 人工转换 |")
+    lines.append("|----|------|------|--------|------|-------|--------|------------|----------|")
     for r in results:
         lines.append(
             f"| {r['id']} | {r['question'][:30]}... | {r['overall']} | "
             f"{r['faithfulness']} | {r['recall_at_5']} | {r['citation_rate']} | "
-            f"{r['handoff']} |"
+            f"{r.get('confidence', 0.0):.3f} | {r['handoff_reason']} | "
+            f"{r['handoff_correct']} |"
         )
 
     lines.append("")
@@ -256,16 +290,28 @@ def generate_report(results: List[Dict[str, Any]]) -> str:
     failed_items = [r for r in results if r["overall"] == "未达标"]
     for item in failed_items:
         lines.append(f"- **{item['id']}**: {item['question']}")
-        lines.append(f"  - 忠实度不足: {item['faithfulness']} < {THRESHOLDS['faithfulness']}")
-        lines.append(f"  - 召回率不足: {item['recall_at_5']} < {THRESHOLDS['recall_at_5']}")
-        lines.append(f"  - 引用不完整: {item['citation_rate']} < {THRESHOLDS['citation_rate']}")
+        if item.get("should_answer", True):
+            if item["faithfulness"] < THRESHOLDS["faithfulness"]:
+                lines.append(f"  - 忠实度不足: {item['faithfulness']} < {THRESHOLDS['faithfulness']}")
+            if item["recall_at_5"] < THRESHOLDS["recall_at_5"]:
+                lines.append(f"  - 召回率不足: {item['recall_at_5']} < {THRESHOLDS['recall_at_5']}")
+            if item["citation_rate"] < THRESHOLDS["citation_rate"]:
+                lines.append(f"  - 引用不完整: {item['citation_rate']} < {THRESHOLDS['citation_rate']}")
+        else:
+            lines.append(f"  - 刁钻题转人工判定失败: needsHandoff={item.get('needs_handoff')}, reason={item.get('handoff_reason')}")
 
     lines.append("")
     lines.append("## 结论")
-    if all(r["overall"] == "达标" for r in results):
+    pass_handoff_rate = handoff_rate <= THRESHOLDS["handoff_rate"]
+    # per-item overall 已按 shouldAnswer 正确区分（刁钻题只看转人工正确率），故 passed==total 即闸门全绿
+    if total and passed == total and pass_handoff_rate:
         lines.append("✅ 所有条目达标，P1 收口检查点通过")
+        lines.append(f"忠实度 {avg_faithfulness:.3f} / Recall@5 {avg_recall:.3f} / 引用 {avg_citation:.3f} / "
+                     f"转人工率 {handoff_rate:.1%} / 转人工正确率 {handoff_correct_rate:.1%}")
     else:
-        lines.append(f"⚠️ {len(failed_items)}/{total} 条未达标，建议优化 Prompt / 检索参数 / 知识库质量")
+        lines.append(f"⚠️ {failed}/{total} 条未达标，建议优化 Prompt / 检索参数 / 知识库质量")
+        lines.append(f"（answerable 忠实度 {avg_faithfulness:.3f} / 召回 {avg_recall:.3f} / 引用 {avg_citation:.3f}；"
+                     f"转人工率 {handoff_rate:.1%}，正确率 {handoff_correct_rate:.1%}）")
 
     return "\n".join(lines)
 
