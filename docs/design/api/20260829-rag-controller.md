@@ -1,6 +1,6 @@
 # RagController 接口契约设计
 
-> 版本：v1.0 ｜ 状态：待用户检查 ｜ 依据：《架构设计说明书》第 4.4.1 节 RAG 检索服务、5.2 节 RAG 双流水线、《开发排期》W3
+> 版本：v1.0 ｜ 状态：**已通过** (2026-08-29 审查: 实现与本文契约一致；审批后补充 citation 来源标识修复) ｜ 依据：《架构设计说明书》第 4.4.1 节 RAG 检索服务、5.2 节 RAG 双流水线、《开发排期》W3
 
 ---
 
@@ -50,11 +50,11 @@ Content-Type: application/json
 | `code` | int | 0=成功 |
 | `message` | string | ok / 错误信息 |
 | `data.answer` | string | LLM 生成的答案（带引用编号） |
-| `data.citations` | string[] | 引用列表 `【1】: 来源` |
+| `data.citations` | string[] | 引用列表 `【1】: <source>`，source 来自入库文档文件名 |
 | `data.sourceChunks` | string[] | 命中的切片内容（Top-K） |
-| `data.latencyMs` | int | 全管道耗时 |
-| `data.faithfulness` | float | 忠实度（当前为占位，P1 收口由评测脚本计算） |
-| `data.recallAtK` | float | 召回率（占位） |
+| `data.latencyMs` | int | 全管道耗时（ms） |
+
+> 质量指标（faithfulness/Recall@5）**不**返回接口，由 CI 评测脚本 `scripts/eval/golden_set_runner.py` 在本地计算并产出报告 `golden-set_report.md`，指标低于基线即阻断合并。参见 `docs/design/eval/20260827-golden-set.md` §2.3。
 
 ### 2.3 接口二：文档入库
 
@@ -96,7 +96,7 @@ X-Tenant-Id: default
 ## 4. 合规/租户/血缘/保留策略影响
 
 - **租户隔离**：所有接口读取 `X-Tenant-Id` 头并透传给 RagService，检索按 tenant_id 过滤（现有实现已支持）；index/delete 按租户作用域操作
-- **数据血缘**：`citations` + `sourceChunks` 让答案可回溯到命中的知识切片
+- **数据血缘**：`citations` 标注来源文件名 + `sourceChunks` 命中切片，让答案可回溯到入库文档
 - **PII 脱敏**：query 为业务文本，不涉及真实个人信息；接口层面不做额外脱敏（由 L1 内容安全横切面处理，P4 阶段接入）
 - **保留策略**：index 入库的文档随知识库保留；delete 为显式清空操作，符合评测重置需求
 
@@ -104,7 +104,7 @@ X-Tenant-Id: default
 
 ## 5. 演进与限制
 
-- **响应结构**：faithfulness/recallAtK 当前为占位 0，实际值由评测脚本基于 answer 与标准答案计算后在报告侧呈现，不回写服务
+- **响应结构**：`faithfulness`/`recallAtK` 已从服务响应中移除，由 CI 评测脚本本地计算并写入 `golden-set_report.md`
 - **检索深度**：当前重排为分数排序占位，Cross-Encoder 接入后接口契约不变（内部实现替换）
 - **流式**：本版本 search 用同步响应（评测需要完整 answer）；SSE 流式检索（首 Token ≤ 2s 目标）在 W3 客服界面接入时以独立 stream 端点补充
 

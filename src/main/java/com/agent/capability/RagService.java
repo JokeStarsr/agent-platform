@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
-import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
@@ -25,7 +24,6 @@ public class RagService {
     private static final Logger log = LoggerFactory.getLogger(RagService.class);
 
     private final VectorStore vectorStore;
-    private final TokenTextSplitter splitter = new TokenTextSplitter();
     private final LlmGateway llmGateway;
 
     public RagService(VectorStore vectorStore, LlmGateway llmGateway) {
@@ -33,16 +31,25 @@ public class RagService {
         this.llmGateway = llmGateway;
     }
 
-    /** 文档入库：Tika 解析 → 语义切块 → 向量化写入（租户打标） */
+    /** 文档入库：Tika 解析 → 按章节切块 → 向量化写入（租户打标） */
     public Result<Long> indexDocument(MultipartFile file, String tenantId) {
         try {
             TikaDocumentReader reader = new TikaDocumentReader(file.getResource());
             List<Document> docs = reader.get();
-            docs.forEach(d -> {
-                d.getMetadata().put("tenant_id", tenantId);
-                d.getMetadata().put("source", file.getOriginalFilename());
-            });
-            List<Document> chunks = splitter.apply(docs);
+            List<Document> chunks = new ArrayList<>();
+            for (Document doc : docs) {
+                Map<String, Object> meta = new HashMap<>();
+                meta.put("tenant_id", tenantId);
+                meta.put("source", file.getOriginalFilename());
+                // 按 "## " 章节标题切块：每个策略小节独立成块，保证检索精确命中对应小节
+                for (String section : doc.getText().split("(?=\\n## )")) {
+                    String sec = section.trim();
+                    if (sec.isEmpty() || !sec.contains("##")) {
+                        continue;
+                    }
+                    chunks.add(new Document(sec, new HashMap<>(meta)));
+                }
+            }
             if (chunks.isEmpty()) {
                 return Result.error(400, "文档解析后无可切块的文本");
             }
@@ -149,9 +156,10 @@ public class RagService {
         for (Document doc : docs) {
             Map<String, Object> metadata = doc.getMetadata();
             String tenant = metadata != null ? metadata.getOrDefault("tenant_id", "unknown").toString() : "unknown";
+            String source = metadata != null ? metadata.getOrDefault("source", "知识库切片").toString() : "知识库切片";
             String content = doc.getText();
             double score = doc.getScore() != null ? doc.getScore() : 0.5;
-            chunks.add(new ScoredChunk(content, tenant, score));
+            chunks.add(new ScoredChunk(content, tenant, source, score));
         }
         return chunks;
     }
@@ -172,13 +180,13 @@ public class RagService {
             ScoredChunk chunk = selectedChunks.get(i);
             String citationRef = "【" + (i + 1) + "】";
             contextBuilder.append(citationRef).append(" ").append(chunk.getContent()).append("\n");
-            citations.add(citationRef + ": 知识库切片");
+            citations.add(citationRef + ": " + (chunk.getSource() != null ? chunk.getSource() : "知识库切片"));
         }
 
         String systemPrompt = buildSystemPrompt() + "\n" + contextBuilder.toString();
 
         // 2) 调用 LLM 生成答案（实际项目中注入LlmGateway）
-        String userPrompt = "基于以上上下文，回答用户问题。如果答案不在上下文中说明，必须诚实回答“我不知道”。要求：1) 只基于提供的上下文回答，不外推；2) 必须对每个关键结论引用对应编号（如【1】、【2】）；3) 置信度低时须明确说明。\n\n用户问题：" + query;
+        String userPrompt = "基于以上上下文，回答用户问题。要求：1) 只基于提供的上下文回答，不外推，但上下文中与问题直接相关的信息（政策/流程/费用等）都应如实整理作答，不得因缺少专门的操作指引表述而拒答；2) 仅当上下文中确实不存在任何与问题相关的信息时，才诚实回答“我不知道”并建议转人工；3) 必须对每个关键结论用【1】、【2】…标注引用，编号按上下文切片出现顺序从【1】开始连续递增，禁止使用文档章节号（如【2.7】）；4) 置信度低时须明确说明。\n\n用户问题：" + query;
 
         String answer = llmGatewayGenerate(systemPrompt, userPrompt);
 
@@ -195,7 +203,7 @@ public class RagService {
         return "你是企业级智能客服助手。你的职责是基于企业知识库回答用户问题。\n" +
                 "核心规则：\n" +
                 "1. 只基于提供的知识库内容回答，不凭个人经验或外部信息。\n" +
-                "2. 答案必须逐句引用来源，格式：【编号】，对应前面上下文中出现的切片。\n" +
+                "2. 答案必须逐句引用来源，引用编号用【1】、【2】…整数（对应上下文切片出现顺序），禁止使用文档章节号（如【2.7】）。\n" +
                 "3. 如果知识库中没有答案，必须诚实回答“我不知道”，并主动提供转人工选项。\n" +
                 "4. 对于涉及政策、法规、敏感信息的问题，必须进行置信度检查，低置信度时转人工。\n" +
                 "5. 对输出内容进行安全过滤，拒绝生成违法、歧视、虚假信息。\n";
@@ -210,11 +218,13 @@ public class RagService {
     public static class ScoredChunk {
         private final String content;
         private final String tenantId;
+        private final String source;
         private final double score;
 
-        public ScoredChunk(String content, String tenantId, double score) {
+        public ScoredChunk(String content, String tenantId, String source, double score) {
             this.content = content;
             this.tenantId = tenantId;
+            this.source = source;
             this.score = score;
         }
 
@@ -224,6 +234,10 @@ public class RagService {
 
         public String getTenantId() {
             return tenantId;
+        }
+
+        public String getSource() {
+            return source;
         }
 
         public double getScore() {
@@ -239,8 +253,6 @@ public class RagService {
         private List<String> citations; // 引用列表 【1】 【2】 ...
         private List<String> sourceChunks; // 使用的切片内容
         private int latencyMs;          // 响应延迟 ms
-        private double faithfulness;    // 忠实度评分（0-1）
-        private double recallAtK;       // 召回率评分（0-1）
 
         public RagResult() {
         }
@@ -254,8 +266,6 @@ public class RagService {
             this.citations = citations;
             this.sourceChunks = sourceChunks;
             this.latencyMs = 0;
-            this.faithfulness = 0.0;
-            this.recallAtK = 0.0;
         }
 
         /** 简便构造：answer + citations + sourceChunks（用于 generateWithCitations 组装） */
@@ -290,14 +300,6 @@ public class RagService {
 
         public int getLatencyMs() {
             return latencyMs;
-        }
-
-        public double getFaithfulness() {
-            return faithfulness;
-        }
-
-        public double getRecallAtK() {
-            return recallAtK;
         }
 
         public void setLatencyMs(int latencyMs) {
