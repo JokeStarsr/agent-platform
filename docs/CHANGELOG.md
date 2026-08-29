@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-08-30（P1 收口 #2：RAG SSE 流式端点）
+
+### 功能与代码
+
+- **`POST /api/rag/search/stream`**（设计文档 `docs/design/api/20260830-rag-stream.md`，用户已批准）：
+  - SSE 长连接，JSON-per-line 事件流：`retrieval`（检索完成先报命中的资料）→ `answer`（逐 token，打字机效果）→ `done`（完整答案 + citations + sourceChunks + **confidenceScore/needsHandoff/handoffReason** + latencyMs + firstTokenMs）→ `error`（异常兜底）
+  - `RagService.streamSearch`：复用同步检索管道（改写→混合检索→重排→Top-K），生成走 `LlmGateway.stream()`（Flux 逐 token），累积全文后复用 `computeHandoff` 计算置信度/转人工（与同步接口判定一致）
+  - 首 Token 记录：`firstTokenMs` 从进控制器到首个 answer 事件；客户端断线 → Flux 订阅取消 → 取消上游 LLM 调用，不浪费 token
+- **`scripts/eval/measure_first_token.py`**：抽样 Golden Set 调 stream 端点，报告首 Token 均值/P50/P95（P1 闸门首 Token ≤ 2s 度量工具）
+
+### 实测
+
+- SSE 端点 HTTP 200 / text/event-stream，事件流完整（retrieval→~270 answer→done）
+- 首 Token 实测（8 条抽样）：**mean 868ms / P50 898ms / P95 1262ms，P95 ≤ 2000ms ✅**（P1 闸门达标）
+
+### 已知待办
+
+- [ ] 客服 Web 端最小界面（消费 stream 端点，打字机 + 引用 + 转人工按钮）——W3 交付物待做
+- [ ] 评测接入 CI 门禁（当前手动跑）
+- [ ] aliyun 上游 429 需在阿里云控制台确认配额（08-31 20:04 恢复）
+
+---
+
 ## 2026-08-30（P1 收口：转人工机制 = 置信度门控 + 转人工标记）
 
 ### 功能与代码

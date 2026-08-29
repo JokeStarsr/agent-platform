@@ -2,17 +2,19 @@ package com.agent.capability;
 
 import com.agent.common.Result;
 import com.agent.model.llm.LlmGateway;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ public class RagService {
             "我不知道", "无法回答", "无法确定", "不能回答", "不清楚", "无法确认",
             "没有找到", "没有关于", "没有相关信息", "并未包含任何", "无法判断",
             "无法提供任何", "拒绝回答", "拒绝生成", "拒绝提供");
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     public RagService(VectorStore vectorStore, LlmGateway llmGateway) {
         this.vectorStore = vectorStore;
@@ -191,7 +194,20 @@ public class RagService {
 
     /** 生成 + 引用溯源 */
     private RagResult generateWithCitations(List<ScoredChunk> selectedChunks, String query, String tenantId) {
-        // 1) 构建带引用的系统Prompt
+        GenerationPrompts prompts = buildGenerationPrompts(selectedChunks, query);
+        String answer = llmGatewayGenerate(prompts.systemPrompt(), prompts.userPrompt());
+
+        List<String> sourceChunks = selectedChunks.stream()
+                .map(ScoredChunk::getContent)
+                .collect(Collectors.toList());
+
+        RagResult result = new RagResult(answer, prompts.citations(), sourceChunks);
+        computeHandoff(result, selectedChunks, query, answer);
+        return result;
+    }
+
+    /** 构建生成 Prompt（含引用上下文），同步/流式共用 */
+    private GenerationPrompts buildGenerationPrompts(List<ScoredChunk> selectedChunks, String query) {
         StringBuilder contextBuilder = new StringBuilder();
         List<String> citations = new ArrayList<>();
         for (int i = 0; i < selectedChunks.size(); i++) {
@@ -200,22 +216,99 @@ public class RagService {
             contextBuilder.append(citationRef).append(" ").append(chunk.getContent()).append("\n");
             citations.add(citationRef + ": " + (chunk.getSource() != null ? chunk.getSource() : "知识库切片"));
         }
-
         String systemPrompt = buildSystemPrompt() + "\n" + contextBuilder.toString();
-
-        // 2) 调用 LLM 生成答案（实际项目中注入LlmGateway）
         String userPrompt = "基于以上上下文，回答用户问题。要求：1) 只基于提供的上下文回答，不外推，但上下文中与问题直接相关的信息（政策/流程/费用等）都应如实整理作答，不得因缺少专门的操作指引表述而拒答；2) 仅当上下文中确实不存在任何与问题相关的信息时，才诚实回答“我不知道”并建议转人工；3) 必须对每个关键结论用【1】、【2】…标注引用，编号按上下文切片出现顺序从【1】开始连续递增，禁止使用文档章节号（如【2.7】）；4) 置信度低时须明确说明。\n\n用户问题：" + query;
+        return new GenerationPrompts(systemPrompt, userPrompt, citations);
+    }
 
-        String answer = llmGatewayGenerate(systemPrompt, userPrompt);
+    /** 生成 Prompt 三要素（system / user / 引用列表） */
+    public record GenerationPrompts(String systemPrompt, String userPrompt, List<String> citations) {}
 
-        // 3) 组装结果
-        List<String> sourceChunks = selectedChunks.stream()
-                .map(ScoredChunk::getContent)
-                .collect(Collectors.toList());
+    /** RAG SSE 流式检索（P1 收口 #2，docs/design/api/20260830-rag-stream.md）
+     *  检索同步 → retrieval 事件 → 逐 token answer 事件（记 firstTokenMs）→ done 事件（置信度/转人工）。
+     *  每行一个紧凑 JSON，前端按 type 字段分发。
+     */
+    public Flux<String> streamSearch(String query, int topK, String tenantId) {
+        return Flux.defer(() -> {
+            long startNs = System.nanoTime();
+            try {
+                QueryRewrite rewrite = rewriteQuery(query);
+                List<ScoredChunk> hybrid = hybridSearch(rewrite.rewritten, tenantId, rewrite.variants, topK);
+                List<ScoredChunk> selected = rerankChunks(hybrid, query, tenantId).stream()
+                        .limit(topK).collect(Collectors.toList());
+                GenerationPrompts prompts = buildGenerationPrompts(selected, query);
+                List<String> sourceChunks = selected.stream()
+                        .map(ScoredChunk::getContent).collect(Collectors.toList());
 
-        RagResult result = new RagResult(answer, citations, sourceChunks);
-        computeHandoff(result, selectedChunks, query, answer);
-        return result;
+                // 1) retrieval 事件：检索完成、生成开始前，先告知前端命中了哪些资料
+                List<String> sources = selected.stream()
+                        .map(ScoredChunk::getSource).distinct().collect(Collectors.toList());
+                Map<String, Object> retrievalData = new LinkedHashMap<>();
+                retrievalData.put("chunkCount", selected.size());
+                retrievalData.put("topK", topK);
+                retrievalData.put("sources", sources);
+                Flux<String> retrievalEvent = Flux.just(event("retrieval", retrievalData));
+
+                // 2) 逐 token answer 事件 + 记首 Token + 累积全文；完成后发 done，异常发 error
+                StringBuilder answerBuf = new StringBuilder();
+                long[] firstTokenMs = {0L};
+                Flux<String> generation = llmGateway.stream(prompts.systemPrompt(), prompts.userPrompt())
+                        .map(token -> {
+                            if (firstTokenMs[0] == 0L) {
+                                firstTokenMs[0] = (System.nanoTime() - startNs) / 1_000_000;
+                            }
+                            answerBuf.append(token);
+                            Map<String, Object> d = new LinkedHashMap<>();
+                            d.put("text", token);
+                            return event("answer", d);
+                        })
+                        .concatWith(Flux.defer(() -> Flux.just(doneEvent(
+                                answerBuf.toString(), prompts, sourceChunks, selected, query,
+                                (System.nanoTime() - startNs) / 1_000_000, firstTokenMs[0]))))
+                        .onErrorResume(ex -> {
+                            Map<String, Object> d = new LinkedHashMap<>();
+                            d.put("message", "生成失败: " + ex.getMessage());
+                            return Flux.just(event("error", d));
+                        });
+
+                return Flux.concat(retrievalEvent, generation);
+            } catch (Exception e) {
+                Map<String, Object> d = new LinkedHashMap<>();
+                d.put("message", "检索失败: " + e.getMessage());
+                return Flux.just(event("error", d));
+            }
+        });
+    }
+
+    /** done 事件：完整答案 + 引用 + 置信度/转人工（与同步接口同构，前端可复用渲染逻辑） */
+    private String doneEvent(String fullAnswer, GenerationPrompts prompts, List<String> sourceChunks,
+                             List<ScoredChunk> selectedChunks, String query, long latencyMs, long firstTokenMs) {
+        RagResult r = new RagResult(fullAnswer, prompts.citations(), sourceChunks);
+        computeHandoff(r, selectedChunks, query, fullAnswer);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("answer", fullAnswer);
+        payload.put("citations", r.getCitations());
+        payload.put("sourceChunks", r.getSourceChunks());
+        payload.put("confidenceScore", r.getConfidenceScore());
+        payload.put("needsHandoff", r.isNeedsHandoff());
+        payload.put("handoffReason", r.getHandoffReason());
+        payload.put("latencyMs", latencyMs);
+        payload.put("firstTokenMs", firstTokenMs);
+        return event("done", payload);
+    }
+
+    /** 序列化 SSE 事件为紧凑 JSON（type + data） */
+    private String event(String type, Map<String, Object> data) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("type", type);
+        if (data != null) {
+            payload.putAll(data);
+        }
+        try {
+            return JSON_MAPPER.writeValueAsString(payload);
+        } catch (Exception e) {
+            return "{\"type\":\"error\",\"message\":\"事件序列化失败\"}";
+        }
     }
 
     /** 置信度门控 + 转人工标记（对应 docs/design/api/20260830-handoff-mechanism.md §2）

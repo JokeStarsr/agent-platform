@@ -5,8 +5,10 @@ import com.agent.common.Result;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
 
 /**
  * L4 AI 能力层：RAG 检索 REST 接口
@@ -29,6 +31,16 @@ public class RagController {
     public Result<RagResult> search(@RequestBody SearchRequest req,
                                     @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
         return ragService.search(req.query(), req.topK(), tenantId);
+    }
+
+    /** SSE 流式检索（P1 收口 #2）：检索 → 逐 token 生成 → done 元数据。
+     *  每行一个紧凑 JSON（type=retrieval/answer/done/error），前端按 type 分发。
+     *  对应设计文档 docs/design/api/20260830-rag-stream.md
+     */
+    @PostMapping(value = "/search/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> searchStream(@RequestBody SearchRequest req,
+                                     @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
+        return ragService.streamSearch(req.query(), req.topK(), tenantId);
     }
 
     /** 文档入库：Tika 解析 → 语义切块 → 向量化 → 写入租户 Collection */

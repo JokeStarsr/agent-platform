@@ -111,7 +111,7 @@ X-Tenant-Id: default
 
 - **响应结构**：`faithfulness`/`recallAtK` 已从服务响应中移除，由 CI 评测脚本本地计算并写入 `golden-set_report.md`
 - **检索深度**：当前重排为分数排序占位，Cross-Encoder 接入后接口契约不变（内部实现替换）
-- **流式**：本版本 search 用同步响应（评测需要完整 answer）；SSE 流式检索（首 Token ≤ 2s 目标）在 W3 客服界面接入时以独立 stream 端点补充
+- **流式**：SSE 流式检索端点 `POST /api/rag/search/stream` 已于 2026-08-30 落地（P1 收口 #2），协议见 `docs/design/api/20260830-rag-stream.md`（JSON-per-line 事件流：retrieval/answer/done/error，done 含 confidenceScore/needsHandoff 等与同步接口同构的元数据）。同步 search 保留供评测使用。
 
 ---
 
