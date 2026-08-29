@@ -1,5 +1,6 @@
 package com.agent.capability;
 
+import com.agent.common.AuditService;
 import com.agent.common.Result;
 import com.agent.model.llm.LlmGateway;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,10 +29,11 @@ public class RagService {
 
     private final VectorStore vectorStore;
     private final LlmGateway llmGateway;
+    private final AuditService auditService;
 
     // L5 转人工门控配置：置信度门控 + 转人工标记（P1 收口，对应 docs/design/api/20260830-handoff-mechanism.md）
-    @Value("${app.rag.handoff.threshold:0.50}")
-    private double handoffThreshold = 0.50;
+    @Value("${app.rag.handoff.threshold:0.25}")
+    private double handoffThreshold = 0.25;
     @Value("${app.rag.handoff.w-retrieval:0.55}")
     private double wRetrieval = 0.55;
     @Value("${app.rag.handoff.w-coverage:0.25}")
@@ -47,9 +49,10 @@ public class RagService {
             "无法提供任何", "拒绝回答", "拒绝生成", "拒绝提供");
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
-    public RagService(VectorStore vectorStore, LlmGateway llmGateway) {
+    public RagService(VectorStore vectorStore, LlmGateway llmGateway, AuditService auditService) {
         this.vectorStore = vectorStore;
         this.llmGateway = llmGateway;
+        this.auditService = auditService;
     }
 
     /** 文档入库：Tika 解析 → 按章节切块 → 向量化写入（租户打标） */
@@ -262,9 +265,16 @@ public class RagService {
                             d.put("text", token);
                             return event("answer", d);
                         })
-                        .concatWith(Flux.defer(() -> Flux.just(doneEvent(
-                                answerBuf.toString(), prompts, sourceChunks, selected, query,
-                                (System.nanoTime() - startNs) / 1_000_000, firstTokenMs[0]))))
+                        .concatWith(Flux.defer(() -> {
+                            long latencyMs = (System.nanoTime() - startNs) / 1_000_000;
+                            String fullAnswer = answerBuf.toString();
+                            RagResult r = new RagResult(fullAnswer, prompts.citations(), sourceChunks);
+                            computeHandoff(r, selected, query, fullAnswer);
+                            auditService.log(tenantId, query, topK, selected.size(), sources,
+                                    latencyMs, firstTokenMs[0], r.isNeedsHandoff(), r.getHandoffReason(),
+                                    r.getConfidenceScore(), fullAnswer.length());
+                            return Flux.just(doneEvent(r, latencyMs, firstTokenMs[0]));
+                        }))
                         .onErrorResume(ex -> {
                             Map<String, Object> d = new LinkedHashMap<>();
                             d.put("message", "生成失败: " + ex.getMessage());
@@ -281,12 +291,9 @@ public class RagService {
     }
 
     /** done 事件：完整答案 + 引用 + 置信度/转人工（与同步接口同构，前端可复用渲染逻辑） */
-    private String doneEvent(String fullAnswer, GenerationPrompts prompts, List<String> sourceChunks,
-                             List<ScoredChunk> selectedChunks, String query, long latencyMs, long firstTokenMs) {
-        RagResult r = new RagResult(fullAnswer, prompts.citations(), sourceChunks);
-        computeHandoff(r, selectedChunks, query, fullAnswer);
+    private String doneEvent(RagResult r, long latencyMs, long firstTokenMs) {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("answer", fullAnswer);
+        payload.put("answer", r.getAnswer());
         payload.put("citations", r.getCitations());
         payload.put("sourceChunks", r.getSourceChunks());
         payload.put("confidenceScore", r.getConfidenceScore());

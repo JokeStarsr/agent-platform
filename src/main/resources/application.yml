@@ -6,6 +6,8 @@ app:
       w-retrieval: 0.55  # 检索相似度权重
       w-coverage: 0.25   # 查询关键词覆盖率权重
       w-citation: 0.20   # 引用完整率权重
+  audit:
+    enabled: true        # 审计日志切面（P1 收口 #4，docs/design/api/20260830-audit-chatui.md）
 
 server:
   port: 8080

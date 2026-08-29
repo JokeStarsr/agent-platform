@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-08-30（P1 收口 #4：审计日志切面 + 客服 Web 最小界面）
+
+### 功能与代码
+
+- **审计日志切面**（`AuditService` + `AuditLogAspect`，设计文档 `docs/design/api/20260830-audit-chatui.md` 已批准）：
+  - `@Aspect` 切 `RagService.search`（同步，环绕记全量）+ `streamSearch`（请求入口；完成审计在 done 事件补记）
+  - 结构化 JSON 日志 → `logs/audit.log`（Logback 独立 appender，按天滚动留 30 天），字段：tenant_id/query/chunkCount/sources/latencyMs/firstTokenMs/needsHandoff/handoffReason/confidenceScore/answerLen（Token 代理）
+  - `spring-boot-starter-aop` 依赖 + `app.audit.enabled` 开关
+- **客服 Web 最小界面**（`static/chat/`，同源服务 `/chat/`）：
+  - 会话输入 + **SSE 打字机**（fetch ReadableStream 解析 data: JSON 按 type 分发）
+  - **引用展示**（done.citations 点击看 sourceChunks）+ **转人工按钮**（needsHandoff 点亮，含 reason）+ 置信度/延迟/首Token 元数据
+- **配置修正**：application.yml 的 `handoff` 块误嵌套进 `audit`（YAML 缩进 bug，导致 `app.rag.handoff.*` 缺失回落到 @Value 默认）；已移回 `rag` 下；同时 `RagService` 的 threshold @Value 默认值从遗留的 0.50 修正为 0.25（与三轮校准一致）
+
+### 实测
+
+- 同步/流式审计均落盘：`logs/audit.log` 出现完整 JSON 行（含 trace_id，流式完成审计因 Reactor 线程 MDC 不传播 trace_id 为空，request 阶段有，P2 可加 Reactor Context 传播）
+- 客服页面 `/chat/`、`app.js`、`style.css` 均 HTTP 200；流式 done 事件含 citations/confidence/handoff/首Token
+- 阈值修正后抽查：退货运费(0.495)=NONE、会飞吗=REFUSAL、会员权益(0.428)=NONE，判定正确
+
+### 已知待办
+
+- [ ] 人工坐席流转（转人工工单、状态）P2 建表实现
+- [ ] 审计真实 token 计量：L6 计量拦截器（P2），P1 用 answerLen 代理
+- [ ] Reactor 线程 MDC trace_id 传播（P2）
+
+---
+
 ## 2026-08-30（P1 收口 #3：评测 CI 门禁）
 
 ### 功能与代码
