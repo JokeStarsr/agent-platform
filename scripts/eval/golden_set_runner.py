@@ -381,6 +381,22 @@ def main():
     print("=" * 50)
     print(f"\n📄 报告已保存至: {report_path}")
 
+    # ===== CI 门禁（P1 收口 #3，docs/design/eval/20260827-golden-set.md §7.4）：指标低于基线 → 退出码非 0，阻断合并 =====
+    all_pass = len(results) > 0 and all(r["overall"] == "达标" for r in results)
+    handoff_count = sum(1 for r in results if r.get("needs_handoff"))
+    handoff_rate = handoff_count / len(results) if results else 1.0
+    gate_pass = all_pass and handoff_rate <= THRESHOLDS["handoff_rate"]
+    if gate_pass:
+        print(f"\n✅ CI 门禁通过：{len(results)} 条全部达标，转人工率 {handoff_rate:.1%} ≤ {THRESHOLDS['handoff_rate']:.0%}")
+    else:
+        fail_reasons = []
+        if not all_pass:
+            fail_reasons.append(f"{sum(1 for r in results if r['overall'] == '未达标')} 条未达标")
+        if handoff_rate > THRESHOLDS["handoff_rate"]:
+            fail_reasons.append(f"转人工率 {handoff_rate:.1%} > {THRESHOLDS['handoff_rate']:.0%}")
+        print(f"\n❌ CI 门禁未通过：{', '.join(fail_reasons)}（见 {report_path} 逐条明细）")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

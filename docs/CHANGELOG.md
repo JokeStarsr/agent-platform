@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-08-30（P1 收口 #3：评测 CI 门禁）
+
+### 功能与代码
+
+- **评测退出码门禁**（golden_set_runner.py）：评测结束按 P1 基线判定——全部条目达标且转人工率 ≤ 30% → 退出码 0；否则打印未过项并 `sys.exit(1)`，供 CI 阻断合并
+- **`.github/workflows/golden-set-gate.yml`**：PR / push 触发，pgvector 服务 → 构建 → 起服(8082) → seed 知识库 → 跑评测门禁 → 上传报告 artifact；指标低于基线任务失败
+- **`scripts/eval/seed_kb.py`**：清空 default 租户 → 批量 index golden-set 文档（CI 从零起必须灌库）
+
+### 验证
+
+- seed_kb.py 实测：4 文档 → 78 切片重灌成功（CI 灌库路径验证）
+- ⚠️ 前置：GitHub 仓库需配置 `DEEPSEEK_API_KEY`（RAG 生成+判分）与 `ZHIPUAI_API_KEY` secrets，否则 workflow 失败；每次 PR 消耗 DeepSeek 额度约 200 次调用
+
+### 已知待办
+
+- [ ] 客服 Web 端最小界面（消费 stream 端点）——P1 收口 #4 待做
+- [ ] aliyun 上游 429 需在阿里云控制台确认配额（08-31 20:04 恢复）
+- [ ] LLM-as-judge 抖动待 P2 双模型互判
+
+---
+
 ## 2026-08-30（P1 收口 #2：RAG SSE 流式端点）
 
 ### 功能与代码

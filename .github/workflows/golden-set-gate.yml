@@ -1,0 +1,72 @@
+name: golden-set-gate
+
+# P1 收口 #3：Golden Set 评测 CI 门禁（docs/design/eval/20260827-golden-set.md §7.4）
+# 指标低于基线（忠实度/召回/引用/转人工率/转人工正确率）→ 任务失败，阻断合并。
+#
+# ⚠️ 前置：仓库需配置两个 Actions secrets：
+#   DEEPSEEK_API_KEY  — RAG 生成 + LLM-as-judge 判分
+#   ZHIPUAI_API_KEY   — 向量化 embedding（application.yml 已有兜底值，可留空）
+# 每次 PR 会消耗 DeepSeek API 额度（评测 + 判分约 200 次调用），属预期成本。
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: agent_platform
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      ZHIPUAI_API_KEY: ${{ secrets.ZHIPUAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build (skip tests, 依赖走缓存)
+        run: mvn -B -ntp package -DskipTests
+
+      - name: Start RAG app (8082)
+        run: |
+          JAR=$(ls target/*.jar | grep -v -- '-sources\|-javadoc' | head -1)
+          echo "JAR=$JAR"
+          nohup java -jar "$JAR" --server.port=8082 > app.log 2>&1 &
+          for i in $(seq 1 60); do
+            if (echo > /dev/tcp/127.0.0.1/8082) 2>/dev/null; then echo "app up after ${i}x2s"; break; fi
+            sleep 2
+          done
+          (echo > /dev/tcp/127.0.0.1/8082) 2>/dev/null || { echo "❌ app 未在 120s 内就绪"; tail -40 app.log; exit 1; }
+
+      - name: Seed 知识库
+        run: python scripts/eval/seed_kb.py
+
+      - name: Golden Set 评测门禁
+        run: python scripts/eval/golden_set_runner.py --json src/test/resources/golden-set/v1/golden-set.json
+
+      - name: 上传评测报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-set-report
+          path: src/test/resources/golden-set/v1/golden-set_report.md
