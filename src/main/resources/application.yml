@@ -24,14 +24,14 @@ spring:
       embedding: zhipuai      # EmbeddingModel 用智谱（RAG 向量化）
       image: openai           # 禁用智谱 image（未配 key 时 zhiPuAiImageModel 会拒绝启动）
 
-    # L6 模型服务：DeepSeek（OpenAI 兼容协议）
-    # 若改用 sub2api 网关，base-url 换成 http://localhost:8180/v1 即可
+    # L6 模型服务：本地默认走 sub2api→zen 免费通道；CI/生产用 LLM_BASE_URL/LLM_API_KEY/LLM_MODEL 覆盖（如 DeepSeek 公网 API）
+    # 注意：Spring AI 会自动追加 /v1/chat/completions，base-url 不要带 /v1（曾遇 /v1/v1 404）
     openai:
-      base-url: https://api.deepseek.com
-      api-key: ${DEEPSEEK_API_KEY:sk-请填入你的DeepSeekKey}
+      base-url: ${LLM_BASE_URL:http://localhost:8180}
+      api-key: ${LLM_API_KEY:sk-f1b4656d6a990035503026d194dd225dd5ab84a957f81f496b77a5cbfeceaf9a}
       chat:
         options:
-          model: deepseek-chat
+          model: ${LLM_MODEL:claude-sonnet-4-5-20250929}
           max-tokens: 4096
           temperature: 0.7
           stream-usage: true

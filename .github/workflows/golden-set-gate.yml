@@ -31,6 +31,10 @@ jobs:
           --health-cmd "pg_isready -U postgres"
           --health-interval 10s --health-timeout 5s --health-retries 5
     env:
+      # 本地默认走 sub2api→zen；CI 云机器够不到本地 zen，必须覆盖回公网 DeepSeek（保持评测校准于 deepseek-chat）
+      LLM_BASE_URL: https://api.deepseek.com
+      LLM_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      LLM_MODEL: deepseek-chat
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       ZHIPUAI_API_KEY: ${{ secrets.ZHIPUAI_API_KEY }}
     steps:

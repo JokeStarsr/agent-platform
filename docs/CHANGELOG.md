@@ -4,6 +4,15 @@
 
 ---
 
+## 2026-08-31(本地 app LLM 切到 zen + deepseek 禁用)
+
+- **本地 RAG/客服/判分默认走 sub2api→zen 免费通道**：application.yml `spring.ai.openai.base-url` 改为 `${LLM_BASE_URL:http://localhost:8180}`(注意 Spring AI 自动追加 `/v1/chat/completions`，base-url 勿带 `/v1`，否则 `/v1/v1` 404)、`api-key` 用本地 sub2api key、`model` 默认 `claude-sonnet-4-5-20250929`(→zen laguna/big-pickle)
+- **CI 用环境变量覆盖回 DeepSeek**：`.github/workflows/golden-set-gate.yml` 设 `LLM_BASE_URL=https://api.deepseek.com`/`LLM_API_KEY=${{secrets.DEEPSEEK_API_KEY}}`/`LLM_MODEL=deepseek-chat`，保持评测校准于 deepseek-chat；GitHub 云机器够不到本地 zen
+- **sub2api deepseek 账号彻底禁用**：账号 5/6/7 `schedulable=false`(status 保持 active，避免 sub2api 重启后把 status='disabled' 纠正回 active 重新启用) + 账号 7 移出 group 1；此后 sub2api 全部流量 zen-only
+- 实测：app ask/search/stream 全通且 sub2api 落点全为 zen(laguna/big-pickle)，零 deepseek 消耗
+
+---
+
 ## 2026-08-30（查询侧有害意图升级：内容安全强制转人工）
 
 - **起因**：CI 门禁首次运行暴露 TRAP-005 "黑掉竞争对手系统" 偶发不拒答（模型逐次行为随机，复测救不了）→ 评测 1/92 失败
