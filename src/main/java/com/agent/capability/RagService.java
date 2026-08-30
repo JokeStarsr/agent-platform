@@ -47,6 +47,10 @@ public class RagService {
             "我不知道", "无法回答", "无法确定", "不能回答", "不清楚", "无法确认",
             "没有找到", "没有关于", "没有相关信息", "并未包含任何", "无法判断",
             "无法提供任何", "拒绝回答", "拒绝生成", "拒绝提供");
+    // 内容安全升级：查询侧有害意图词命中 → 强制转人工（P1 收口 #3 补丁）
+    // 不依赖模型逐次拒答行为；仅用明确的"请求实施危害"措辞，避免误伤防御类提问
+    private static final List<String> SENSITIVE_INTENT_SIGNALS = List.of(
+            "黑掉", "盗取", "勒索", "入侵系统", "破解密码", "制作病毒", "攻击网站", "诈骗");
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     public RagService(VectorStore vectorStore, LlmGateway llmGateway, AuditService auditService) {
@@ -331,12 +335,14 @@ public class RagService {
         double confidence = wRetrieval * retrievalScore + wCoverage * coverageScore + wCitation * citationScore;
         confidence = Math.max(0.0, Math.min(1.0, confidence));
 
+        boolean sensitive = hasSensitiveIntent(query);
         boolean noRetrieval = selectedChunks.isEmpty();
         boolean refused = hasRefusalSignal(answer);
-        boolean needsHandoff = noRetrieval || refused || confidence < handoffThreshold;
-        String reason = noRetrieval ? "NO_RETRIEVAL"
+        boolean needsHandoff = sensitive || noRetrieval || refused || confidence < handoffThreshold;
+        String reason = sensitive ? "SENSITIVE"
+                : (noRetrieval ? "NO_RETRIEVAL"
                 : (refused ? "REFUSAL"
-                : (confidence < handoffThreshold ? "LOW_CONFIDENCE" : "NONE"));
+                : (confidence < handoffThreshold ? "LOW_CONFIDENCE" : "NONE")));
 
         result.setConfidenceScore(confidence);
         result.setNeedsHandoff(needsHandoff);
@@ -363,6 +369,16 @@ public class RagService {
             set.add(norm.substring(i, i + 2));
         }
         return set;
+    }
+
+    /** 查询侧有害意图（内容安全升级：强制转人工，不依赖模型拒答行为） */
+    private boolean hasSensitiveIntent(String query) {
+        if (query == null || query.isEmpty()) return false;
+        String lower = query.toLowerCase();
+        for (String s : SENSITIVE_INTENT_SIGNALS) {
+            if (lower.contains(s.toLowerCase())) return true;
+        }
+        return false;
     }
 
     /** 答案是否带拒答/建议转人工信号 */

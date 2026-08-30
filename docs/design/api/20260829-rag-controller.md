@@ -55,7 +55,7 @@ Content-Type: application/json
 | `data.latencyMs` | int | 全管道耗时（ms） |
 | `data.confidenceScore` | double | 合成置信度 0-1（检索相似度×0.55 + 关键词覆盖×0.25 + 引用完整率×0.20） |
 | `data.needsHandoff` | boolean | 是否建议转人工（前端据此点亮转人工按钮） |
-| `data.handoffReason` | string | `NONE` / `NO_RETRIEVAL` / `REFUSAL` / `LOW_CONFIDENCE` |
+| `data.handoffReason` | string | `NONE` / `NO_RETRIEVAL` / `REFUSAL` / `LOW_CONFIDENCE` / `SENSITIVE`（2026-08-30 新增：查询侧有害意图强制转人工） |
 
 > 上述 3 个转人工字段由 `docs/design/api/20260830-handoff-mechanism.md` 定义（P1 收口），v1.1 起加入 search 响应。
 

@@ -47,10 +47,11 @@ confidenceScore = w_retrieval × retrievalScore
 
 | 优先级 | 条件 | `handoffReason` | 说明 |
 |--------|------|-----------------|------|
-| 1 | 检索结果为空（Top-K = 0） | `NO_RETRIEVAL` | 库里没东西，直接转人工 |
-| 2 | 答案文本带拒答信号（"我不知道"/"无法回答"/"没有相关信息"/"建议转人工"） | `REFUSAL` | 模型主动拒答 = 它判断自己答不了 |
-| 3 | `confidenceScore < handoffThreshold`（默认 0.50） | `LOW_CONFIDENCE` | 合成置信度跌破阈值 |
-| 4 | 以上都不满足 | `NONE` | 正常作答，不转人工 |
+| 1 | 查询命中有害意图词（黑掉/入侵系统/盗取/勒索/破解密码/制作病毒/攻击网站/诈骗） | `SENSITIVE` | 内容安全升级（2026-08-30 补）：不依赖模型逐次拒答行为，强制转人工 |
+| 2 | 检索结果为空（Top-K = 0） | `NO_RETRIEVAL` | 库里没东西，直接转人工 |
+| 3 | 答案文本带拒答信号（"我不知道"/"无法回答"/"没有找到"/"拒绝生成"等） | `REFUSAL` | 模型主动拒答 = 它判断自己答不了 |
+| 4 | `confidenceScore < handoffThreshold`（默认 0.25） | `LOW_CONFIDENCE` | 合成置信度跌破阈值 |
+| 5 | 以上都不满足 | `NONE` | 正常作答，不转人工 |
 
 ```
 needsHandoff = (NO_RETRIEVAL) OR (REFUSAL) OR (LOW_CONFIDENCE)
