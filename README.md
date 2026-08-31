@@ -22,13 +22,17 @@
 docker compose up -d
 ```
 
-### 2. 配置 API Key
+### 2. 配置 API Key（环境变量，禁止明文入库）
 
-二选一，设置环境变量 `DEEPSEEK_API_KEY`：
+| 变量 | 说明 | 本地默认 |
+|------|------|----------|
+| `LLM_BASE_URL` | 生成模型端点（OpenAI 兼容） | `http://localhost:8180`（sub2api→zen 免费通道） |
+| `LLM_API_KEY` | 生成模型 key | sub2api claude-code key |
+| `LLM_MODEL` | 生成模型名 | `claude-sonnet-4-5-20250929` |
+| `ZHIPUAI_API_KEY` | 智谱 embedding（RAG 向量化） | 智谱 key |
 
-- **DeepSeek 官方**：`https://api.deepseek.com`（application.yml 默认）
-- **sub2api 网关**（本地 8080 网关方案）：改 application.yml 中
-  `spring.ai.openai.base-url: http://localhost:8180/v1`
+- **DeepSeek 官方**：`LLM_BASE_URL=https://api.deepseek.com` + `DEEPSEEK_API_KEY` + `LLM_MODEL=deepseek-chat`
+- **CI**：`.github/workflows/golden-set-gate.yml` 用 GitHub secrets 覆盖回 DeepSeek，保持评测校准一致
 
 ### 3. 用 IDEA 打开
 
@@ -37,7 +41,7 @@ IDEA → Open → 选择 `D:\ClaudeCode\AgentProduct\agent-platform\pom.xml`。
 
 ### 4. 运行
 
-启动 `com.agent.AgentPlatformApplication`，验证演示接口：
+启动 `com.agent.AgentPlatformApplication`，验证演示接口（本地 8080 被 opencode2api 占用时用 `--server.port=8082`）：
 
 ```bash
 # 单轮问答

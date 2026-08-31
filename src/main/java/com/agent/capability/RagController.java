@@ -2,6 +2,7 @@ package com.agent.capability;
 
 import com.agent.capability.RagService.RagResult;
 import com.agent.common.Result;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -28,7 +29,7 @@ public class RagController {
 
     /** 在线检索：查询改写 → 混合检索 → 重排 → Top-K → 生成 + 引用溯源 */
     @PostMapping("/search")
-    public Result<RagResult> search(@RequestBody SearchRequest req,
+    public Result<RagResult> search(@Valid @RequestBody SearchRequest req,
                                     @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
         return ragService.search(req.query(), req.topK(), tenantId);
     }
@@ -38,7 +39,7 @@ public class RagController {
      *  对应设计文档 docs/design/api/20260830-rag-stream.md
      */
     @PostMapping(value = "/search/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> searchStream(@RequestBody SearchRequest req,
+    public Flux<String> searchStream(@Valid @RequestBody SearchRequest req,
                                      @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
         return ragService.streamSearch(req.query(), req.topK(), tenantId);
     }

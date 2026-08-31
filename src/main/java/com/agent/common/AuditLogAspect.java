@@ -1,6 +1,6 @@
 package com.agent.common;
 
-import com.agent.capability.RagService.RagResult;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 审计日志切面（P1 收口 #4，docs/design/api/20260830-audit-chatui.md §2.1）
@@ -21,6 +22,8 @@ import java.util.List;
 public class AuditLogAspect {
 
     private final AuditService auditService;
+    // 反射式读 Result.data 审计字段：common 是跨层基础设施，不 import 具体业务类型（七层依赖只允许向下）
+    private final ObjectMapper dataMapper = new ObjectMapper();
 
     public AuditLogAspect(AuditService auditService) {
         this.auditService = auditService;
@@ -36,17 +39,27 @@ public class AuditLogAspect {
         int topK = args[1] == null ? 5 : (Integer) args[1];
         String tenantId = (String) args[2];
 
-        if (result instanceof Result<?> r && r.getData() instanceof RagResult rag) {
-            List<String> sourceChunks = rag.getSourceChunks();
+        if (result instanceof Result<?> r && r.getData() != null) {
+            Map<String, Object> data = dataMapper.convertValue(r.getData(), Map.class);
+            List<?> sourceChunks = asList(data.get("sourceChunks"));
+            List<?> citations = asList(data.get("citations"));
+            Object answer = data.get("answer");
             auditService.log(tenantId, query, topK,
                     sourceChunks == null ? 0 : sourceChunks.size(),
-                    extractSources(rag.getCitations()), latencyMs, 0,
-                    rag.isNeedsHandoff(), rag.getHandoffReason(), rag.getConfidenceScore(),
-                    rag.getAnswer() == null ? 0 : rag.getAnswer().length());
+                    extractSources(citations), latencyMs, 0,
+                    Boolean.TRUE.equals(data.get("needsHandoff")),
+                    String.valueOf(data.getOrDefault("handoffReason", "NONE")),
+                    data.get("confidenceScore") instanceof Number n ? n.doubleValue() : 0.0,
+                    answer == null ? 0 : String.valueOf(answer).length());
         } else {
             auditService.logRequest(tenantId, query, topK);
         }
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<?> asList(Object v) {
+        return v instanceof List<?> l ? l : null;
     }
 
     @Around("execution(* com.agent.capability.RagService.streamSearch(..))")
@@ -60,9 +73,10 @@ public class AuditLogAspect {
     }
 
     /** 引用列表【1】: 文件名 → 提取文件名 */
-    private List<String> extractSources(List<String> citations) {
+    private List<String> extractSources(List<?> citations) {
         if (citations == null) return List.of();
         return citations.stream()
+                .map(String::valueOf)
                 .map(c -> c.contains(":") ? c.substring(c.indexOf(":") + 1).trim() : c)
                 .toList();
     }
