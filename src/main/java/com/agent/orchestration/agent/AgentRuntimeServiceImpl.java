@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,8 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
     private final Map<Long, Sinks.Many<AgentTraceEvent>> sinks = new ConcurrentHashMap<>();
     private final Map<Long, CompletableFuture<Boolean>> approvals = new ConcurrentHashMap<>();
     private final Map<Long, Boolean> cancelFlags = new ConcurrentHashMap<>();
+    // run 内全局事件序号：trace 事件流唯一编号（t_agent_step UNIQUE(run_id, step_no)，同一步的 PLAN/TOOL_CALL/TOOL_RESULT 各有独立序号）
+    private final Map<Long, AtomicInteger> eventSeqs = new ConcurrentHashMap<>();
 
     public AgentRuntimeServiceImpl(AgentRunRepository repo, LlmGateway llm, List<AgentTool> toolList) {
         this.repo = repo;
@@ -212,19 +215,20 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
                 steps++;
                 tokens += LLM_STEP_TOKENS;
                 long llmMs = (System.nanoTime() - t0) / 1_000_000;
-                emit(runId, traceId, steps, "PLAN", null, null, null, LLM_STEP_TOKENS, llmMs,
+                repo.updateProgress(runId, steps, tokens);
+                emit(runId, traceId, "PLAN", null, null, null, LLM_STEP_TOKENS, llmMs,
                         intent.thought() == null ? intent.action() : intent.thought());
 
                 switch (intent.action() == null ? "" : intent.action()) {
                     case AgentStepIntent.FINAL_ANSWER -> {
-                        emit(runId, traceId, steps, "REFLECT", null, null, null, 0, 0,
+                        emit(runId, traceId, "REFLECT", null, null, null, 0, 0,
                                 "任务完成：" + (intent.answer() == null ? "" : intent.answer()));
                         finish(runId, AgentRunStatus.COMPLETED.name(), null, steps, tokens);
                         return;
                     }
                     case AgentStepIntent.REASON -> {
                         history.add("思考:" + safe(intent.thought()));
-                        emit(runId, traceId, steps, "REFLECT", null, null, null, 0, 0, safe(intent.thought()));
+                        emit(runId, traceId, "REFLECT", null, null, null, 0, 0, safe(intent.thought()));
                     }
                     case AgentStepIntent.TOOL_CALL -> {
                         AgentTool tool = tools.get(intent.tool());
@@ -245,7 +249,7 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
                         // ---- 写操作护栏：HITL 挂起 ----
                         if (tool.write()) {
                             repo.hangForApproval(runId, tool.name(), args);
-                            emit(runId, traceId, steps, "HITL", tool.name(), argsHash, null, 0, 0,
+                            emit(runId, traceId, "HITL", tool.name(), argsHash, null, 0, 0,
                                     "写操作待人工审批：" + tool.name());
                             Boolean approved;
                             try {
@@ -262,7 +266,7 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
                             }
                             if (!approved) {
                                 history.add("写操作被拒绝:" + tool.name());
-                                emit(runId, traceId, steps, "REFLECT", tool.name(), argsHash, null, 0, 0,
+                                emit(runId, traceId, "REFLECT", tool.name(), argsHash, null, 0, 0,
                                         "写操作被拒绝，跳过该工具");
                                 continue;
                             }
@@ -270,11 +274,11 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
                         }
 
                         // ---- ACT：执行工具 ----
-                        emit(runId, traceId, steps, "TOOL_CALL", tool.name(), argsHash, null, 0, 0,
+                        emit(runId, traceId, "TOOL_CALL", tool.name(), argsHash, null, 0, 0,
                                 "调用工具 " + tool.name());
                         Map<String, Object> result = tool.execute(args);
                         String resultHash = hash(result);
-                        emit(runId, traceId, steps, "TOOL_RESULT", tool.name(), argsHash, resultHash, 0, 0,
+                        emit(runId, traceId, "TOOL_RESULT", tool.name(), argsHash, resultHash, 0, 0,
                                 result.toString());
 
                         // ---- 循环检测（连续 loopThreshold 次相同动作）----
@@ -344,13 +348,15 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
         }
     }
 
-    private void emit(long runId, String traceId, int stepNo, String phase, String tool, String argsHash, String resultHash,
+    private void emit(long runId, String traceId, String phase, String tool, String argsHash, String resultHash,
                       int llmTokens, long latencyMs, String decision) {
-        AgentTraceEvent ev = new AgentTraceEvent(phase, stepNo, tool, argsHash, resultHash, llmTokens, latencyMs,
+        // 事件序号 = run 内全局递增（同一 LLM 步内多次 emit 各占一个唯一序号，见 AgentTraceEvent javadoc）
+        int seq = eventSeqs.computeIfAbsent(runId, k -> new AtomicInteger()).incrementAndGet();
+        AgentTraceEvent ev = new AgentTraceEvent(phase, seq, tool, argsHash, resultHash, llmTokens, latencyMs,
                 decision == null ? null : truncate(decision, 2000), Instant.now());
         try {
             repo.appendStep(runId, new AgentRunRepository.StepRow(
-                    ev.phase(), ev.stepNo(), ev.tool(), ev.argsHash(), ev.resultHash(),
+                    ev.phase(), ev.seqNo(), ev.tool(), ev.argsHash(), ev.resultHash(),
                     ev.llmTokens(), ev.latencyMs(), ev.decision()));
         } catch (Exception e) {
             log.warn("agent run {} trace 落库失败: {}", runId, e.getMessage());

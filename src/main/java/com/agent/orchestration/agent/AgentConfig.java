@@ -8,8 +8,9 @@ public record AgentConfig(int maxSteps, int tokenBudget, int timeoutMs, int loop
 
     public static AgentConfig of(String appId) {
         if (appId != null && appId.startsWith("TR_")) {
-            return new AgentConfig(25, 60_000, 180_000, 3, 10);
+            return new AgentConfig(25, 60_000, 300_000, 3, 10);
         }
-        return new AgentConfig(10, 32_000, 60_000, 3, 5);
+        // timeout 300s：实测 LLM 通道单轮决策 5-45s（sub2api→zen 免费通道），10 步 × 单轮 + 余量
+        return new AgentConfig(10, 32_000, 300_000, 3, 5);
     }
 }

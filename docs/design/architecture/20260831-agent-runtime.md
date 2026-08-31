@@ -47,7 +47,7 @@ PLAN（LLM 思考）→ [写操作? → HITL 挂起等待审批] → ACT（工�
 |------|-------------|-------------|-----------|
 | `maxSteps` | 10 | 25 | TERMINATED，优雅终止 |
 | `tokenBudget` | 32K/请求 | 60K/请求 | BUDGET_EXHAUSTED，整理已得结果输出 |
-| `timeout` | 60s | 180s | TIMEOUT，任务标记可重放 |
+| `timeout` | 300s | 300s | TIMEOUT，任务标记可重放 |
 | `loopDetectorThreshold` | 连续 3 次相似动作 | 同左 | 强制 REFLECT 一轮，再犯则 TERMINATED |
 | `writeOpsPolicy` | 白名单 + 确认 | 同左 | 写操作 HITL 挂起，预览待审批 |
 | `maxConcurrency` | 单租户 5 并发 | 单租户 10 并发 | 超出 REJECTED |
@@ -165,4 +165,4 @@ PLAN（LLM 思考）→ [写操作? → HITL 挂起等待审批] → ACT（工�
 | 版本 | 日期 | 变更 | 说明 |
 |------|------|------|------|
 | v1.0 | 2026-08-31 | 初版 | 用户批准后按 §8 实施（2026-08-31） |
-| v1.1 | 2026-08-31 | 实现回写（偏离说明） | ① **HITL 审批超时**：v1 审批挂起 10 分钟无响应 → TERMINATED（补充 §2.1 未定义细节）；② **t_agent_run 增列** `pending_tool/pending_args` 存待审批写操作（原 §4.1 无审批字段，表决于单表 + status=WAITING_APPROVAL，不另建审批表）；③ **token 计量**：`generateStructured` 不返回 usage，v1 用固定估算 `LLM_STEP_TOKENS=500/步` 驱动 budget 语义（L6 计量拦截器落地后接真实值）；④ **stream 仅实时事件**：历史事件走 replay 接口（SSE 不做回放合并）；⑤ 工具选择与参数校验 v1 用 JSON 模式手动解析执行（不接 Spring AI 原生 tool_calls，见 LlmGateway javadoc），`INVALID_TOOL_MAX=2` 次非法决策 → TERMINATED；⑥ 实现时补充 `WAITING_APPROVAL` 挂起重启恢复：启动时置 FAILED（审批 future 内存态不可持久化） |
+| v1.1 | 2026-08-31 | 实现回写（偏离说明） | ① **HITL 审批超时**：v1 审批挂起 10 分钟无响应 → TERMINATED（补充 §2.1 未定义细节）；② **t_agent_run 增列** `pending_tool/pending_args` 存待审批写操作（原 §4.1 无审批字段，表决于单表 + status=WAITING_APPROVAL，不另建审批表）；③ **token 计量**：`generateStructured` 不返回 usage，v1 用固定估算 `LLM_STEP_TOKENS=500/步` 驱动 budget 语义（L6 计量拦截器落地后接真实值）；④ **stream 仅实时事件**：历史事件走 replay 接口（SSE 不做回放合并）；⑤ 工具选择与参数校验 v1 用 JSON 模式手动解析执行（不接 Spring AI 原生 tool_calls，见 LlmGateway javadoc），`INVALID_TOOL_MAX=2` 次非法决策 → TERMINATED；⑥ 实现时补充 `WAITING_APPROVAL` 挂起重启恢复：启动时置 FAILED（审批 future 内存态不可持久化）；⑦ **timeout 默认值 60s/180s → 300s**：端到端实测（2026-08-31）本机 LLM 通道（sub2api→zen）单轮决策 5-45s，60s 客服档只剩 1 步余量，任务几乎必然 TIMEOUT；300s = 10 步 × 单轮 30s 余量，兼顾慢通道与护栏止损；⑧ **trace 事件序号**：step_no 改为 run 内全局递增事件序号（同一步的 PLAN/TOOL_CALL/TOOL_RESULT/HITL 各占唯一序号，原设计"步骤号"会触发 UNIQUE(run_id, step_no) 冲突静默丢事件——端到端验证发现的缺陷）；⑨ detail 实时进度：循环内 updateProgress（steps_done/tokens_used 每步原子更新，原设计 §4.1 有此语义但实现初版漏了） |
