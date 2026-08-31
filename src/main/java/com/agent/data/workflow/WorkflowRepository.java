@@ -124,6 +124,12 @@ public class WorkflowRepository {
                 (rs, i) -> rs.getLong("instance_id"));
     }
 
+    /** 补偿清单增量持久化（引擎在写节点成功后登记，崩溃/重启不丢） */
+    public void updateCompensation(long instanceId, String compensationJson) {
+        jdbc.update("UPDATE t_workflow_instance SET compensation = ? WHERE instance_id = ?",
+                compensationJson, instanceId);
+    }
+
     /* ---------- t_workflow_node_run ---------- */
 
     public record NodeRow(long nodeRunId, long instanceId, String nodeId, String nodeType, String parentNodeId,
