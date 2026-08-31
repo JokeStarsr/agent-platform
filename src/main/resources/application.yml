@@ -54,11 +54,13 @@ spring:
     password: postgres
     driver-class-name: org.postgresql.Driver
 
-  # Agent Runtime 表结构（t_agent_run/t_agent_step，幂等 DDL，设计文档 20260831-agent-runtime.md §4）
+  # 表结构幂等 DDL（每次启动执行）：Agent Runtime（20260831-agent-runtime.md §4）+ Workflow 引擎（20260831-workflow-engine.md §4）
   sql:
     init:
       mode: always
-      schema-locations: classpath:schema-agent-runtime.sql
+      schema-locations:
+        - classpath:schema-agent-runtime.sql
+        - classpath:schema-workflow.sql
 
   # 短期记忆（P2 使用，先起容器避免误连）
   data:
