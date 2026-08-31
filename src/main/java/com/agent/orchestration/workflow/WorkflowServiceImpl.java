@@ -564,6 +564,14 @@ public class WorkflowServiceImpl implements WorkflowService {
         }
     }
 
+    /** 供人工超时升级扫描器推送事件（同包，SSE 汇入） */
+    void publishToSink(long instanceId, WorkflowEvent ev) {
+        Sinks.Many<WorkflowEvent> sink = sinks.get(instanceId);
+        if (sink != null) {
+            sink.tryEmitNext(ev);
+        }
+    }
+
     private InstanceRow requireInstance(String tenantId, long instanceId) {
         InstanceRow inst = repo.findInstance(instanceId)
                 .orElseThrow(() -> new BizException(404, "实例不存在: " + instanceId));

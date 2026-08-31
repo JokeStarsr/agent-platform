@@ -184,7 +184,7 @@ public class WorkflowRepository {
                   UPDATE t_workflow_node_run
                      SET status = 'WAITING_APPROVAL', escalation_at = ?, input_snapshot = ?
                    WHERE node_run_id = ?
-                  """, escalationAt, inputSnapshot, nodeRunId);
+                  """, java.sql.Timestamp.from(escalationAt), inputSnapshot, nodeRunId);
     }
 
     /** 完成/失败/跳过：原子写状态 + 输出快照 + 错误 + finished_at */
@@ -222,7 +222,7 @@ public class WorkflowRepository {
                      AND escalation_at IS NOT NULL AND escalation_at < ?
                      AND escalated_at IS NULL
                   ORDER BY escalation_at
-                  """, NODE_ROW, now);
+                  """, NODE_ROW, java.sql.Timestamp.from(now));
     }
 
     public void markEscalated(long nodeRunId) {
