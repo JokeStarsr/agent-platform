@@ -1,6 +1,6 @@
 # 商旅 Agent 场景接入设计（W8：真实编排压测基础）
 
-> 版本：v1.0 ｜ 状态：**待检查**（2026-09-01 提交用户审批） ｜ 依据：《开发排期》W8、docs/design/architecture/20260831-workflow-engine.md（W6 已批准）、20260901-memory-context.md（W7 已批准）、20260901-tool-engine.md（W5 已批准）
+> 版本：v1.1 ｜ 状态：**已批准**（2026-09-01 用户审批通过，实现完成） ｜ 依据：《开发排期》W8、docs/design/architecture/20260831-workflow-engine.md（W6 已批准）、20260901-memory-context.md（W7 已批准）、20260901-tool-engine.md（W5 已批准）
 
 ---
 
