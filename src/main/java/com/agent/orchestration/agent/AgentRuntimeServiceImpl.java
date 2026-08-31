@@ -3,6 +3,9 @@ package com.agent.orchestration.agent;
 import com.agent.common.BizException;
 import com.agent.data.agentrun.AgentRunRepository;
 import com.agent.model.llm.LlmGateway;
+import com.agent.tool.ToolEngineService;
+import com.agent.tool.ToolMeta;
+import com.agent.tool.ToolRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -27,8 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
  * L3 编排层：Agent Runtime 核心（docs/design/architecture/20260831-agent-runtime.md §2）
@@ -49,7 +51,8 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
 
     private final AgentRunRepository repo;
     private final LlmGateway llm;
-    private final Map<String, AgentTool> tools;
+    private final ToolEngineService toolEngine;
+    private final ToolRegistry toolRegistry;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(4, r -> {
         Thread t = new Thread(r, "agent-runtime");
@@ -61,11 +64,15 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
     private final Map<Long, Boolean> cancelFlags = new ConcurrentHashMap<>();
     // run 内全局事件序号：trace 事件流唯一编号（t_agent_step UNIQUE(run_id, step_no)，同一步的 PLAN/TOOL_CALL/TOOL_RESULT 各有独立序号）
     private final Map<Long, AtomicInteger> eventSeqs = new ConcurrentHashMap<>();
+    // 写操作决策级幂等键：runId → (工具+参数签名 → uuid)。同一决策循环内重复调用复用键，防重复执行；键冲突/失败换新键一次
+    private final Map<Long, Map<String, String>> decisionKeys = new ConcurrentHashMap<>();
 
-    public AgentRuntimeServiceImpl(AgentRunRepository repo, LlmGateway llm, List<AgentTool> toolList) {
+    public AgentRuntimeServiceImpl(AgentRunRepository repo, LlmGateway llm,
+                                   ToolEngineService toolEngine, ToolRegistry toolRegistry) {
         this.repo = repo;
         this.llm = llm;
-        this.tools = toolList.stream().collect(Collectors.toMap(AgentTool::name, Function.identity()));
+        this.toolEngine = toolEngine;
+        this.toolRegistry = toolRegistry;
     }
 
     /** 重启后 WAITING_APPROVAL 的 run 审批 future 丢失，置 FAILED 避免永久挂起 */
@@ -95,7 +102,7 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
         String traceId = UUID.randomUUID().toString();
         long runId = repo.createRun(tenantId, appId, task, AgentRunStatus.CREATED.name(),
                 c.maxSteps(), c.tokenBudget(), c.timeoutMs(), c.loopThreshold(), traceId);
-        executor.submit(() -> executeLoop(runId, tenantId, task, c, traceId));
+        executor.submit(() -> executeLoop(runId, tenantId, appId, task, c, traceId));
         return runId;
     }
 
@@ -163,7 +170,7 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
 
     /* ---------- 核心循环 ---------- */
 
-    private void executeLoop(long runId, String tenantId, String task, AgentConfig c, String traceId) {
+    private void executeLoop(long runId, String tenantId, String appId, String task, AgentConfig c, String traceId) {
         long startNs = System.nanoTime();
         int steps = 0;
         int tokens = 0;
@@ -231,8 +238,8 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
                         emit(runId, traceId, "REFLECT", null, null, null, 0, 0, safe(intent.thought()));
                     }
                     case AgentStepIntent.TOOL_CALL -> {
-                        AgentTool tool = tools.get(intent.tool());
-                        if (tool == null) {
+                        Optional<com.agent.tool.AgentTool> resolved = toolRegistry.resolve(intent.tool());
+                        if (resolved.isEmpty()) {
                             invalidTool++;
                             history.add("工具不存在:" + safe(intent.tool()));
                             if (invalidTool > INVALID_TOOL_MAX) {
@@ -242,12 +249,15 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
                             }
                             continue;
                         }
+                        com.agent.tool.AgentTool tool = resolved.get();
+                        ToolMeta meta = toolRegistry.metaOf(intent.tool()).orElseThrow();
                         Map<String, Object> args = intent.args() == null ? Map.of() : intent.args();
                         String argsHash = hash(args);
+                        String sig = tool.name() + "|" + argsHash;
                         invalidTool = 0;
 
-                        // ---- 写操作护栏：HITL 挂起 ----
-                        if (tool.write()) {
+                        // ---- 写操作护栏：HITL 挂起（审批通过后经 ToolEngine 幂等执行）----
+                        if (meta.isWrite()) {
                             repo.hangForApproval(runId, tool.name(), args);
                             emit(runId, traceId, "HITL", tool.name(), argsHash, null, 0, 0,
                                     "写操作待人工审批：" + tool.name());
@@ -273,16 +283,55 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
                             repo.resumeFromApproval(runId, AgentRunStatus.RUNNING.name());
                         }
 
-                        // ---- ACT：执行工具 ----
+                        // ---- ACT：经 ToolEngine 执行（写操作至少 1 次幂等重试：400 不占键重试，504/409 换新键重试）----
                         emit(runId, traceId, "TOOL_CALL", tool.name(), argsHash, null, 0, 0,
                                 "调用工具 " + tool.name());
-                        Map<String, Object> result = tool.execute(args);
+                        Map<String, Object> result = null;
+                        BizException lastErr = null;
+                        for (int attempt = 0; attempt <= 1 && result == null; attempt++) {
+                            String key = meta.isWrite() ? decisionKeyOf(runId, sig, attempt > 0) : null;
+                            try {
+                                result = toolEngine.invoke(tenantId, appId,
+                                        new ToolEngineService.InvokeRequest(tool.name(), args, key)).data();
+                            } catch (BizException be) {
+                                int code = be.getCode();
+                                if (code == 400 || code == 504 || code == 409) {
+                                    lastErr = be;
+                                    if (code == 409) {
+                                        decisionKeys.computeIfAbsent(runId, k -> new ConcurrentHashMap<>())
+                                                .put(sig, UUID.randomUUID().toString());
+                                    }
+                                    continue;
+                                }
+                                if (code == 403 || code == 404) {
+                                    history.add("工具拒绝(" + code + "):" + be.getMessage());
+                                    emit(runId, traceId, "REFLECT", tool.name(), argsHash, null, 0, 0,
+                                            "工具拒绝: " + be.getMessage());
+                                    if (meta.isWrite()) {
+                                        break; // 不可重试，跳过该写工具
+                                    }
+                                    continue;
+                                }
+                                throw be; // 500 等交由外层 → FAILED
+                            }
+                        }
+                        if (result == null) {
+                            invalidTool++;
+                            history.add("工具调用失败:" + (lastErr == null ? "未知" : lastErr.getMessage()));
+                            if (invalidTool > INVALID_TOOL_MAX) {
+                                finish(runId, AgentRunStatus.TERMINATED.name(),
+                                        "工具连续调用失败（" + invalidTool + " 次）", steps, tokens);
+                                return;
+                            }
+                            emit(runId, traceId, "REFLECT", tool.name(), argsHash, null, 0, 0,
+                                    "工具调用失败，请尝试更换参数/重新执行");
+                            continue;
+                        }
                         String resultHash = hash(result);
                         emit(runId, traceId, "TOOL_RESULT", tool.name(), argsHash, resultHash, 0, 0,
                                 result.toString());
 
                         // ---- 循环检测（连续 loopThreshold 次相同动作）----
-                        String sig = tool.name() + "|" + argsHash;
                         recentSigs.addLast(sig);
                         while (recentSigs.size() > c.loopThreshold()) {
                             recentSigs.removeFirst();
@@ -378,11 +427,11 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
         sb.append("你是电商客服智能体，通过多步推理与工具调用完成用户任务。\n")
                 .append("护栏：最多 ").append(c.maxSteps()).append(" 步；Token 预算 ").append(c.tokenBudget())
                 .append("；仅可使用下方列出的工具。\n")
-                .append("可用工具（JSON）：");
-        List<Map<String, Object>> descs = tools.values().stream()
+                .append("可用工具（JSON）— 写操作（write=true）需用户审批且带幂等键，仅在必要且明确时请求调用：");
+        List<Map<String, Object>> descs = toolRegistry.listTools().stream()
                 .map(t -> Map.<String, Object>of(
                         "name", t.name(), "description", t.description(),
-                        "args_schema", t.argsSchema(), "write", t.write()))
+                        "args_schema", t.parameters(), "write", t.isWrite()))
                 .toList();
         sb.append(toJson(descs));
         sb.append("\n输出规则：只输出一个 JSON 对象，禁止任何多余文本，格式：\n")
@@ -397,6 +446,17 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
         return "任务：" + task + "\n\n观察历史（时间正序）：\n"
                 + (history.isEmpty() ? "（无）" : String.join("\n", history))
                 + "\n\n请给出下一步决策。";
+    }
+
+    /** 写操作决策级幂等键：同一决策循环内重试复用；fresh=true 表示键冲突后换新键 */
+    private String decisionKeyOf(long runId, String sig, boolean fresh) {
+        Map<String, String> keys = decisionKeys.computeIfAbsent(runId, k -> new ConcurrentHashMap<>());
+        if (fresh) {
+            String k = UUID.randomUUID().toString();
+            keys.put(sig, k);
+            return k;
+        }
+        return keys.computeIfAbsent(sig, s -> UUID.randomUUID().toString());
     }
 
     /* ---------- 帮助 ---------- */

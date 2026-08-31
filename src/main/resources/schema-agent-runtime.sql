@@ -40,3 +40,18 @@ CREATE TABLE IF NOT EXISTS t_agent_step (
     UNIQUE (run_id, step_no)
 );
 CREATE INDEX IF NOT EXISTS idx_agent_step_run ON t_agent_step (run_id, step_no);
+
+-- 工具调用幂等记录（docs/design/architecture/20260901-tool-engine.md §2.2）
+CREATE TABLE IF NOT EXISTS t_tool_invocation (
+    invocation_id   BIGSERIAL PRIMARY KEY,
+    idempotency_key VARCHAR(128) NOT NULL,
+    tenant_id       VARCHAR(64)  NOT NULL,
+    tool_name       VARCHAR(64)  NOT NULL,
+    args_hash       VARCHAR(64)  NOT NULL,
+    result_payload  TEXT,
+    status          VARCHAR(16)  NOT NULL,   -- IN_PROGRESS / SUCCESS / FAILED
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    finished_at     TIMESTAMPTZ,
+    UNIQUE (idempotency_key)
+);
+CREATE INDEX IF NOT EXISTS idx_tool_invo_tenant_created ON t_tool_invocation (tenant_id, created_at);

@@ -1,13 +1,14 @@
-package com.agent.orchestration.agent.tools;
+package com.agent.tool.tools;
 
-import com.agent.orchestration.agent.AgentTool;
+import com.agent.tool.AgentTool;
+import com.agent.tool.ToolPermission;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * L3 编排层种子工具：查询最近订单（只读，Mock 数据，商旅/真实订单服务接入前占位演示）
+ * L5 种子工具：查询最近订单（只读，Mock 数据，真实订单服务接入前占位演示）
  */
 @Component
 public class OrderQueryTool implements AgentTool {
@@ -23,13 +24,13 @@ public class OrderQueryTool implements AgentTool {
     }
 
     @Override
-    public String argsSchema() {
+    public String parameters() {
         return "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\",\"description\":\"用户ID\"}},\"required\":[\"userId\"]}";
     }
 
     @Override
-    public boolean write() {
-        return false;
+    public ToolPermission permission() {
+        return ToolPermission.READ;
     }
 
     @Override
