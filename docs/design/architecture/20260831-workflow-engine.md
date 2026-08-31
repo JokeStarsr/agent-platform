@@ -1,6 +1,6 @@
 # Workflow 引擎与 HITL 人工节点设计（L3 编排层）
 
-> 版本：v1.0 ｜ 状态：**待检查**（2026-08-31 提交用户审批） ｜ 依据：《架构设计说明书》4.3（编排层/HITL）、《开发排期》W6、docs/design/architecture/20260831-agent-runtime.md（W4，已批准）、20260901-tool-engine.md（W5，已批准）
+> 版本：v1.1 ｜ 状态：**已批准**（2026-09-01 用户审批通过，实现完成） ｜ 依据：《架构设计说明书》4.3（编排层/HITL）、《开发排期》W6、docs/design/architecture/20260831-agent-runtime.md（W4，已批准）、20260901-tool-engine.md（W5，已批准）
 
 ---
 
@@ -240,3 +240,4 @@ UNIQUE 约束：`(instance_id, node_id, attempt)`（重试 = 新 attempt 行，�
 | 版本 | 日期 | 变更 | 说明 |
 |------|------|------|------|
 | v1.0 | 2026-08-31 | 初版 | 交用户审批（铁律：批准前不写实现） |
+| v1.1 | 2026-09-01 | 实现回写（偏离说明，用户批准实现完成） | ① **CONDITION/SUBFLOW 仅解析不进运行时**：节点类型保留、解析+环检测+校验合法，但 v1 引擎分派遇此两类抛"暂不支持"——AC-1/2/3 与商旅主流程均不含这两类，保持正确性优先；② **变量引用扁平化**：引擎 `out=X` 直接落 `vars["X"]` 顶层，引用用 `$.X`（args）与 `${X}`（prompt），未实现 `$.n1.policy` 式嵌套引用（设计 §2.1 示例写法，v1 简化为顶层键）；③ **人工超时升级扫描器落地**（@Scheduled 30s）：查 WAITING_APPROVAL+超时+未升级 → 节点 `escalated_at` 标记（防重复）+ HUMAN_ESCALATED 事件，实例仍 WAITING_APPROVAL 可继续审批；escalationUrl 回调 v1 留待接线；④ **发现并修复 JDBC Instant 类型**：hangNodeForApproval/findEscalationDue 传 Instant 到 TIMESTAMPTZ 列 JDBC 无法推断类型，改 `Timestamp.from(Instant)`（真 PG 端到端实测暴露，单测因内存 fake 未覆盖）；⑤ **PARALLEL 分支展平语义**：分支节点扁平入图、`parent_node_id` 记归属，引擎按 PARALLEL 聚合；REQUIRE_ALL 部分失败→补偿该并行下已成功写分支（复用原幂等键）；⑥ **补偿持久化时序**：写节点成功即 `updateCompensation` 落库（崩溃/重启不丢），`finishInstance`/`finishTerminal` 均保留补偿清单不为 NULL 覆盖；⑦ **AC-4 真 PG 端到端实测**（2026-09-01，docker agent-platform-pg）：无 LLM 变体 政策→人工确认→下单→通知 → COMPLETED，变量/幂等键/补偿链路通过；含 LLM 节点（n3）跑通需本地 LLM_API_KEY（当前 zen 网关 401，环境配置项与 W6 逻辑无关） |
