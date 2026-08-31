@@ -43,4 +43,17 @@ public class LlmGateway {
                 .stream()
                 .content();
     }
+
+    /** 结构化输出（JSON 模式强约束）：LLM 返回指定类型，用于 Agent 决策等需机器可读的场景
+     *  <p>v1 不接 Spring AI 原生 tool_calls（内部自动执行循环与编排层手动执行冲突），
+     *  工具描述走 system prompt，返回 JSON 由编排层手动解析执行；W5 工具注册中心落地后再评估切换。</p>
+     */
+    public <T> T generateStructured(String system, String user, Class<T> outputType) {
+        ChatClient client = ChatClient.builder(chatModel).build();
+        return client.prompt()
+                .system(system)
+                .user(user)
+                .call()
+                .entity(outputType);
+    }
 }
