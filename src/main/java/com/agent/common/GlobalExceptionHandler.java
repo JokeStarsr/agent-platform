@@ -32,6 +32,12 @@ public class GlobalExceptionHandler {
         return Result.error(400, msg);
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result<Void> handleNoResource(org.springframework.web.servlet.resource.NoResourceFoundException e) {
+        return Result.error(404, "资源不存在: " + e.getResourcePath());
+    }
+
     @ExceptionHandler(Exception.class)
     public Result<Void> handleUnknown(Exception e) {
         log.error("未捕获异常", e);

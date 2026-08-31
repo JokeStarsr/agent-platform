@@ -61,6 +61,13 @@ spring:
       schema-locations:
         - classpath:schema-agent-runtime.sql
         - classpath:schema-workflow.sql
+        - classpath:schema-memory.sql
+
+  # W7 记忆/上下文配置（docs/design/architecture/20260901-memory-context.md §2.3）
+  memory:
+    short-term-ttl-seconds: 1800      # 短期记忆（Redis）滚动 TTL 30 分钟
+    long-term-topk: 5                 # 长期记忆默认近邻召回数
+    budget-default-tokens: 16384      # 上下文组装默认总预算token
 
   # 短期记忆（P2 使用，先起容器避免误连）
   data:
