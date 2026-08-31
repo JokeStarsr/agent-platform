@@ -14,6 +14,7 @@ public record WorkflowGraph(
         List<String[]> edges,
         Map<String, List<ConditionBranch>> conditionBranches,
         Map<String, List<String>> parallelBranches,
-        List<String> order // 拓扑序（含虚拟边，环检测保证正确性）
+        List<String> order, // 拓扑序（含虚拟边，环检测保证正确性）
+        String escalationUrl // 人工节点超时升级回调（W8：补齐 W6 预留，scanner 幂等 POST）
 ) {
 }

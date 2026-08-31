@@ -1,8 +1,9 @@
 {
   "flowId": "trip_booking",
-  "name": "商旅主流程 Mock 版",
+  "name": "商旅主流程 Mock 版（W8：含政策校验）",
   "timeoutMs": 1800000,
-  "inputSchema": {"city": "string", "travelerId": "string", "days": "int"},
+  "inputSchema": {"city": "string", "travelerId": "string", "days": "int",
+                  "flightClass": "string", "hotelStar": "number", "bookAheadDays": "number", "totalAmount": "number"},
   "nodes": [
     {"id": "n1", "type": "TOOL", "tool": "policy_query",
      "args": {"city": "$.input.city"}, "out": "policy"},
@@ -18,8 +19,16 @@
      "prompt": "出差政策：${policy}\n航班比价：${flightOpts}\n酒店比价：${hotelOpts}\n请生成一个出行方案JSON（含推荐航班/酒店与理由）。",
      "out": "plan"},
 
+    {"id": "n3b", "type": "TOOL", "tool": "policy_check",
+     "args": {
+       "flightClass": "$.input.flightClass",
+       "hotelStar": "$.input.hotelStar",
+       "bookAheadDays": "$.input.bookAheadDays",
+       "totalAmount": "$.input.totalAmount"
+     }, "out": "policyVerdict"},
+
     {"id": "n4", "type": "HUMAN", "title": "商旅方案确认",
-     "content": "出差方案：${plan}\n请人工确认（同意将下单，驳回将取消本单）。",
+     "content": "出差方案：${plan}\n政策校验：${policyVerdict}\n请人工确认（同意将下单，驳回将取消本单）。",
      "escalateAfterMs": 1800000},
 
     {"id": "n5", "type": "TOOL", "tool": "book_order",
@@ -30,6 +39,6 @@
   ],
   "edges": [
     ["n1", "n2"], ["n2", "n3"], ["n2a", "n3"], ["n2b", "n3"],
-    ["n3", "n4"], ["n4", "n5"], ["n5", "n6"]
+    ["n3", "n3b"], ["n3b", "n4"], ["n4", "n5"], ["n5", "n6"]
   ]
 }

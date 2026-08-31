@@ -1,0 +1,14 @@
+[
+  {"taskId": "t01", "task": "帮我订上海 3 天行程", "input": {"city": "上海", "travelerId": "u_t01", "days": 3, "flightClass": "经济舱", "hotelStar": 3, "bookAheadDays": 5, "totalAmount": 3000}, "expect": {"compliant": true, "needsApproval": false}},
+  {"taskId": "t02", "task": "订北京行程，预算较高", "input": {"city": "北京", "travelerId": "u_t02", "days": 2, "flightClass": "经济舱", "hotelStar": 3, "bookAheadDays": 3, "totalAmount": 8000}, "expect": {"compliant": true, "needsApproval": true}},
+  {"taskId": "t03", "task": "帮领导订头等舱去广州", "input": {"city": "广州", "travelerId": "u_t03", "days": 2, "flightClass": "头等舱", "hotelStar": 3, "bookAheadDays": 4, "totalAmount": 5000}, "expect": {"compliant": false, "needsApproval": false}},
+  {"taskId": "t04", "task": "订行程住五星级酒店", "input": {"city": "深圳", "travelerId": "u_t04", "days": 2, "flightClass": "经济舱", "hotelStar": 5, "bookAheadDays": 4, "totalAmount": 4000}, "expect": {"compliant": false, "needsApproval": false}},
+  {"taskId": "t05", "task": "明天就要出发的行程", "input": {"city": "杭州", "travelerId": "u_t05", "days": 1, "flightClass": "经济舱", "hotelStar": 3, "bookAheadDays": 1, "totalAmount": 2000}, "expect": {"compliant": false, "needsApproval": false}},
+  {"taskId": "t06", "task": "成都出差，尽量经济", "input": {"city": "成都", "travelerId": "u_t06", "days": 4, "flightClass": "经济舱", "hotelStar": 2, "bookAheadDays": 7, "totalAmount": 2500}, "expect": {"compliant": true, "needsApproval": false}},
+  {"taskId": "t07", "task": "贵宾出行，头等舱+五星", "input": {"city": "西安", "travelerId": "u_t07", "days": 2, "flightClass": "头等舱", "hotelStar": 5, "bookAheadDays": 6, "totalAmount": 9000}, "expect": {"compliant": false, "needsApproval": false}},
+  {"taskId": "t08", "task": "标准商务出行（边界值）", "input": {"city": "南京", "travelerId": "u_t08", "days": 2, "flightClass": "经济舱", "hotelStar": 3, "bookAheadDays": 2, "totalAmount": 5000}, "expect": {"compliant": true, "needsApproval": false}},
+  {"taskId": "t09", "task": "紧急会议，提前 2 天恰恰好", "input": {"city": "武汉", "travelerId": "u_t09", "days": 1, "flightClass": "经济舱", "hotelStar": 2, "bookAheadDays": 2, "totalAmount": 1500}, "expect": {"compliant": true, "needsApproval": false}},
+  {"taskId": "t10", "task": "苏州考察，超标酒店", "input": {"city": "苏州", "travelerId": "u_t10", "days": 2, "flightClass": "经济舱", "hotelStar": 4, "bookAheadDays": 3, "totalAmount": 3500}, "expect": {"compliant": false, "needsApproval": false}},
+  {"taskId": "t11", "task": "厦门团建，便宜实惠", "input": {"city": "厦门", "travelerId": "u_t11", "days": 3, "flightClass": "经济舱", "hotelStar": 2, "bookAheadDays": 4, "totalAmount": 2800}, "expect": {"compliant": true, "needsApproval": false}},
+  {"taskId": "t12", "task": "青岛出差含周末", "input": {"city": "青岛", "travelerId": "u_t12", "days": 3, "flightClass": "经济舱", "hotelStar": 3, "bookAheadDays": 2, "totalAmount": 4200}, "expect": {"compliant": true, "needsApproval": false}}
+]

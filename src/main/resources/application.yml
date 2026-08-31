@@ -62,6 +62,7 @@ spring:
         - classpath:schema-agent-runtime.sql
         - classpath:schema-workflow.sql
         - classpath:schema-memory.sql
+        - classpath:schema-policy.sql
 
   # W7 记忆/上下文配置（docs/design/architecture/20260901-memory-context.md §2.3）
   memory:

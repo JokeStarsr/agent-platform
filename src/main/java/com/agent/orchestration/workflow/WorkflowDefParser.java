@@ -54,7 +54,9 @@ public class WorkflowDefParser {
             // 5. 拓扑排序 + 环检测
             List<String> order = kahnOrder(flatNodes.keySet(), validAdj);
 
-            return new WorkflowGraph(flowId, defaultTimeoutMs, flatNodes, edges, conditionBranches, parallelBranches, order);
+            String escalationUrl = (String) root.get("escalationUrl");
+            return new WorkflowGraph(flowId, defaultTimeoutMs, flatNodes, edges, conditionBranches,
+                    parallelBranches, order, escalationUrl);
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
