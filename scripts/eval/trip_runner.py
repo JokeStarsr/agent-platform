@@ -61,13 +61,23 @@ def main():
     results = []
     for t in tasks:
         tid, st, err = run_task(args.base, t)
-        results.append((tid, st, err))
-        print(f"{tid}: {st}  {err}")
+        # 正确性判定（W8 口径）：合规任务→COMPLETED；违规任务→FAILED 且 errorMsg 含 POLICY_VIOLATION（100% 拦截）
+        exp = t["expect"].get("compliant", True)
+        if exp:
+            ok = st == "COMPLETED"
+        else:
+            ok = st == "FAILED" and "POLICY_VIOLATION" in (err or "")
+        results.append((tid, st, err, ok))
+        print(f"{tid}: {st}  {'OK' if ok else 'X'}  {err}")
 
     total = len(results)
-    done = sum(1 for _, st, _ in results if st == "COMPLETED")
-    rate = done / total * 100 if total else 0
-    print(f"\n===== 成功率 {done}/{total} = {rate:.1f}% =====")
+    ok = sum(1 for *_, o in results if o)
+    rate = ok / total * 100 if total else 0
+    compiled = sum(1 for _, st, *_ in results if st == "COMPLETED")
+    violations = [t for t in tasks if not t["expect"].get("compliant", True)]
+    blocked = [r for r in results if r[1] == "FAILED" and "POLICY_VIOLATION" in (r[2] or "")]
+    print(f"\n===== 正确率 {ok}/{total} = {rate:.1f}% "
+          f"(合规完成 {compiled}/{total - len(violations)} · 违规拦截 {len(blocked)}/{len(violations)}) =====")
     return 0 if rate >= 80 else 1
 
 

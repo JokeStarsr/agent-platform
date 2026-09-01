@@ -50,6 +50,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     /** 可重试工具错误码（超时/键冲突）——重试换新幂等键 */
     private static final Set<Integer> RETRYABLE_TOOL_CODES = Set.of(504, 409);
     private static final int TOOL_RETRY_MAX = 1;
+    private static final int LLM_RETRY_MAX = 3;                       // LLM 空输出/异常短退避重试（zen 通道抖动，W8 成功率优化）
+    private static final String LLM_SYSTEM = "你是工作流中的 LLM 生成节点，严格按要求输出。";
     private static final long DEFAULT_HUMAN_ESCALATE_MS = 30 * 60_000L;
     private static final String REJECTED_REASON = "REJECTED_HUMAN";
 
@@ -331,20 +333,48 @@ public class WorkflowServiceImpl implements WorkflowService {
                 }
             }
             case LLM -> {
-                try {
-                    String prompt = substitute(node.prompt(), vars);
-                    String content = llm.generate("你是工作流中的 LLM 生成节点，严格按要求输出。", prompt);
-                    if (node.out() != null && !node.out().isBlank()) {
-                        vars.put(node.out(), Map.of("text", content));
+                // zen 免费通道偶发 502/空 content → 短退避重试 + 空内容守卫（避免 Map.of(null) NPE，提升成功率）
+                String content = null;
+                String lastErr = null;
+                for (int attempt = 0; attempt < LLM_RETRY_MAX; attempt++) {
+                    try {
+                        String prompt = substitute(node.prompt(), vars);
+                        String c = llm.generate(LLM_SYSTEM, prompt);
+                        if (c == null || c.isBlank()) {
+                            lastErr = "LLM 返回空内容（尝试 " + (attempt + 1) + "/" + LLM_RETRY_MAX + "）";
+                        } else {
+                            content = c;
+                            break;
+                        }
+                    } catch (Exception e) {
+                        if (e instanceof InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                        lastErr = rootMsg(e);
                     }
-                    repo.commitInstance(instanceId, WorkflowStatus.RUNNING.name(), writeJson(vars), "[]", null);
-                    repo.finishNode(row.nodeRunId(), NodeStatus.COMPLETED.name(), writeJson(Map.of("text", content)), null);
-                    emit(instanceId, "NODE_DONE", node.id(), NodeStatus.COMPLETED.name(), "LLM 完成");
-                    return NodeStepResult.processed();
-                } catch (Exception e) {
-                    repo.finishNode(row.nodeRunId(), NodeStatus.FAILED.name(), null, rootMsg(e));
-                    return NodeStepResult.failed("节点 " + node.id() + " LLM 失败: " + rootMsg(e));
+                    if (attempt < LLM_RETRY_MAX - 1) {
+                        try {
+                            Thread.sleep(300L * (attempt + 1));
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
                 }
+                if (content == null) {
+                    repo.finishNode(row.nodeRunId(), NodeStatus.FAILED.name(), null, lastErr);
+                    emit(instanceId, "NODE_DONE", node.id(), NodeStatus.FAILED.name(), "LLM 失败 " + lastErr);
+                    return NodeStepResult.failed("节点 " + node.id() + " LLM 失败: " + lastErr);
+                }
+                if (node.out() != null && !node.out().isBlank()) {
+                    vars.put(node.out(), Map.of("text", content));
+                }
+                repo.commitInstance(instanceId, WorkflowStatus.RUNNING.name(), writeJson(vars), "[]", null);
+                repo.finishNode(row.nodeRunId(), NodeStatus.COMPLETED.name(),
+                        writeJson(Map.of("text", content)), null);
+                emit(instanceId, "NODE_DONE", node.id(), NodeStatus.COMPLETED.name(), "LLM 完成");
+                return NodeStepResult.processed();
             }
             case HUMAN -> {
                 Instant escAt = Instant.now().plus(node.escalateAfterMs() == null

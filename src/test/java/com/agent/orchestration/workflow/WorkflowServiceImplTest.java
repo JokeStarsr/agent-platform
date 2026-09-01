@@ -168,6 +168,28 @@ class WorkflowServiceImplTest {
         assertEquals("COMPLETED", status(id), "retryNode 成功后流程应走完");
     }
 
+    /* ---------- LLM 空输出重试（W8 成功率优化：zen 通道抖动） ---------- */
+
+    @Test
+    void llm空输出_重试耗尽后干净失败_不NPE() throws Exception {
+        // llm.generate 未 stub → 默认返回 null → 3 次重试耗尽 → FAILED("LLM 返回空内容")
+        long id = cut.start(TENANT, APP, llmFlow(), Map.of());
+        waitUntil(() -> "FAILED".equals(status(id)));
+        assertTrue(repo.nodeRuns(id).stream()
+                .anyMatch(r -> "LLM".equals(r.nodeType()) && "FAILED".equals(r.status())), "LLM 节点应 FAILED");
+        NodeRow llm = repo.nodeRuns(id).stream().filter(r -> "LLM".equals(r.nodeType())).findFirst().orElseThrow();
+        assertTrue(llm.errorMsg() != null && llm.errorMsg().contains("LLM 返回空内容"), llm.errorMsg());
+    }
+
+    @Test
+    void llm空输出后成功_重试恢复继续完成() throws Exception {
+        when(llm.generate(anyString(), anyString()))
+                .thenReturn(null).thenReturn(null).thenReturn("一份出行方案");
+        long id = cut.start(TENANT, APP, llmFlow(), Map.of());
+        waitUntil(() -> "COMPLETED".equals(status(id)) || "FAILED".equals(status(id)));
+        assertEquals("COMPLETED", status(id), "LLM 重试成功后应走完");
+    }
+
     /* ---------- 流程定义 ---------- */
 
     /** 无人工节点：n1 工具 → n2 工具 */
@@ -187,9 +209,16 @@ class WorkflowServiceImplTest {
                 + "\"edges\":[[\"n1\",\"n2\"],[\"n2\",\"n3\"]]}";
     }
 
+    /** 含 LLM 节点的简单流程（n1 LLM → n2 notify_user） */
+    private static String llmFlow() {
+        return "{\"flowId\":\"llm\",\"nodes\":["
+                + "{\"id\":\"n1\",\"type\":\"LLM\",\"prompt\":\"生成方案\",\"out\":\"plan\"},"
+                + "{\"id\":\"n2\",\"type\":\"TOOL\",\"tool\":\"notify_user\",\"args\":{\"orderId\":\"X\"},\"out\":\"o\"}],"
+                + "\"edges\":[[\"n1\",\"n2\"]]}";
+    }
+
     /** n1 写工具(book_order) → 人工（AC-2 驳回补偿） */
-    private static String rejectFlow() {
-        return "{\"flowId\":\"ac2\",\"nodes\":["
+    private static String rejectFlow() {        return "{\"flowId\":\"ac2\",\"nodes\":["
                 + "{\"id\":\"n1\",\"type\":\"TOOL\",\"tool\":\"book_order\",\"args\":{\"plan\":\"$\"},\"out\":\"order\",\"rollbackTool\":\"cancel_order\"},"
                 + "{\"id\":\"n2\",\"type\":\"HUMAN\",\"title\":\"确认下单\",\"content\":\"order ${order}\",\"escalateAfterMs\":1800000}],"
                 + "\"edges\":[[\"n1\",\"n2\"]]}";
