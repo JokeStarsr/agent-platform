@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知识库 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L4 能力 · RAG 知识库</span>
+      <h1>知识库</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 集合状态 · 文档入库 · 清空（租户 default）</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>📊 集合状态</h3>
+      <div id="statGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div class="empty">加载中…</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📤 文档入库</h3>
+      <form class="row" id="uploadForm">
+        <input type="file" id="fileInput" accept=".md,.txt,.pdf,.docx" required>
+        <button type="submit" class="primary">上传并索引</button>
+      </form>
+      <div class="sub">支持 md/txt/pdf/docx，按 "## " 章节切块向量化，写入租户集合</div>
+    </div>
+
+    <div class="card">
+      <h3>🗑 清空知识库</h3>
+      <p class="sub" style="margin:0">删除当前租户（default）全部切片，用于评测重置。</p>
+      <button class="danger" id="clearBtn">清空集合</button>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

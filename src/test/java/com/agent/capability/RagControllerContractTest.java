@@ -10,7 +10,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -131,6 +133,44 @@ class RagControllerContractTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", is(0)))
                 .andExpect(jsonPath("$.data", is(2)));
+    }
+
+    /* ---------- GET /api/rag/collections 集合状态 ---------- */
+
+    @Test
+    void collections_返回租户统计字段() throws Exception {
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("collectionName", "vector_store");
+        stats.put("tenantId", "tenant-x");
+        stats.put("chunkCount", 42L);
+        stats.put("docCount", 5L);
+        stats.put("lastUpdate", "2026-09-02T00:00:00Z");
+        when(ragService.collections("tenant-x")).thenReturn(Result.ok(stats));
+
+        mockMvc.perform(get("/api/rag/collections").header("X-Tenant-Id", "tenant-x"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(0)))
+                .andExpect(jsonPath("$.data.collectionName", is("vector_store")))
+                .andExpect(jsonPath("$.data.tenantId", is("tenant-x")))
+                .andExpect(jsonPath("$.data.chunkCount", is(42)))
+                .andExpect(jsonPath("$.data.docCount", is(5)));
+    }
+
+    @Test
+    void collections_缺X_Tenant_Id_回退default租户() throws Exception {
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("collectionName", "vector_store");
+        stats.put("tenantId", "default");
+        stats.put("chunkCount", 0L);
+        stats.put("docCount", 0L);
+        stats.put("lastUpdate", null);
+        when(ragService.collections("default")).thenReturn(Result.ok(stats));
+
+        mockMvc.perform(get("/api/rag/collections"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(0)))
+                .andExpect(jsonPath("$.data.tenantId", is("default")))
+                .andExpect(jsonPath("$.data.chunkCount", is(0)));
     }
 
     /* ---------- DELETE /api/rag/collections 清空知识库 ---------- */

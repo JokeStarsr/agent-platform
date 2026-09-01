@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG 检索 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L4 能力 · RAG 检索</span>
+      <h1>RAG 检索</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 混合检索 · 引用溯源 · 置信度门控（同步接口）</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>🔎 在线检索</h3>
+      <form class="row" id="searchForm">
+        <input type="search" id="query" placeholder="输入问题，如：7 天内退货政策是什么？" required style="flex:1">
+        <label>Top-K
+          <input type="number" id="topK" value="5" min="1" max="20" style="width:64px">
+        </label>
+        <button type="submit" class="primary">检索</button>
+      </form>
+      <div id="result" style="margin-top:14px"></div>
+      <div id="sources"></div>
+    </div>
+
+    <div class="card">
+      <h3>📚 命中与元数据</h3>
+      <pre class="json" id="meta">检索后展示引用、置信度、转人工判定</pre>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

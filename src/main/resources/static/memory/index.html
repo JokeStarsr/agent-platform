@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>记忆与上下文 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L4 能力 · 三级记忆</span>
+      <h1>记忆与上下文</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 短期(会话) · 长期(画像) · 组织记忆 · 待确认</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>📖 能力概览</h3>
+      <pre class="json" id="demoBody">加载中…</pre>
+    </div>
+
+    <div class="card">
+      <h3>⏳ 短期记忆（会话 · TTL 30min）</h3>
+      <form class="row" id="shortQForm">
+        <input type="text" id="sessionIdQ" placeholder="sessionId，如 s_001" required>
+        <button type="submit" class="primary">查询</button>
+      </form>
+      <div id="shortOut"></div>
+      <hr style="border:none;border-top:1px solid #edf0f5;margin:12px 0">
+      <form class="row" id="shortWForm">
+        <input type="text" id="sessionIdW" placeholder="sessionId" required>
+        <input type="text" id="roleW" placeholder="role,如 user/assistant" required>
+        <input type="text" id="contentW" placeholder="内容" required style="flex:1">
+        <button type="submit" class="primary">写入</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>🧠 长期记忆（用户画像）</h3>
+      <form class="row" id="longQForm">
+        <input type="text" id="userIdQ" placeholder="userId，如 u_1001" required>
+        <input type="text" id="queryQ" placeholder="语义查询（可选）">
+        <button type="submit" class="primary">查询</button>
+      </form>
+      <div id="longOut"></div>
+      <hr style="border:none;border-top:1px solid #edf0f5;margin:12px 0">
+      <form class="row" id="longWForm">
+        <input type="text" id="userIdW" placeholder="userId" required>
+        <input type="text" id="fieldW" placeholder="字段，如 preference" required>
+        <input type="text" id="valueW" placeholder="内容，如 偏好靠窗" required style="flex:1">
+        <button type="submit" class="primary">写入</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>🔔 待确认画像（确认流）</h3>
+      <form class="row" id="pendingForm">
+        <input type="text" id="pendingUserId" placeholder="userId" required>
+        <button type="submit" class="primary">查询</button>
+      </form>
+      <div id="pendingOut"></div>
+    </div>
+
+    <div class="card">
+      <h3>🏢 组织记忆（复用 RAG）</h3>
+      <form class="row" id="orgForm">
+        <input type="text" id="orgQuery" placeholder="组织知识问题，如 退货政策" required style="flex:1">
+        <button type="submit" class="primary">搜索</button>
+      </form>
+      <div id="orgOut"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

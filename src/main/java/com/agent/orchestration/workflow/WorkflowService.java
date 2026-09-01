@@ -1,5 +1,6 @@
 package com.agent.orchestration.workflow;
 
+import com.agent.common.PageResult;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -9,6 +10,9 @@ import java.util.Map;
  * L3 编排层：Workflow 引擎接口（docs/design/architecture/20260831-workflow-engine.md §3）
  */
 public interface WorkflowService {
+
+    /** 实例列表（租户范围，状态可选筛选，page/size 在 Repository 层 clamp） */
+    PageResult<Map<String, Object>> listInstances(String tenantId, int page, int size, String status);
 
     /** 启动流程（定义 JSON 校验 + 入参 → CREATED → 异步执行），返回 instanceId */
     long start(String tenantId, String appId, String flowDefJson, Map<String, Object> input);

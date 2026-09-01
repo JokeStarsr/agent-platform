@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent 运行 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L3 编排 · Agent Runtime</span>
+      <h1>Agent 运行监控</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 运行列表 · 提交任务 · 取消/重试</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>🚀 提交任务</h3>
+      <form class="row" id="submitForm">
+        <input type="text" id="taskInput" placeholder="任务描述，如：查询订单状态" required style="flex:1">
+        <button type="submit" class="primary">提交</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>📊 运行列表</h3>
+      <form class="row" id="filterForm">
+        <label>状态
+          <select id="statusSel">
+            <option value="">全部</option>
+            <option>CREATED</option>
+            <option>RUNNING</option>
+            <option>WAITING_APPROVAL</option>
+            <option>COMPLETED</option>
+            <option>FAILED</option>
+            <option>TIMEOUT</option>
+            <option>CANCELED</option>
+          </select>
+        </label>
+        <button type="submit" class="primary">查询</button>
+      </form>
+      <table>
+        <thead>
+          <tr><th>runId</th><th>应用</th><th>任务</th><th>状态</th><th>步数</th><th>Token</th><th>创建时间</th><th>操作</th></tr>
+        </thead>
+        <tbody id="tb"></tbody>
+      </table>
+      <div id="empty" class="empty" hidden>暂无运行记录</div>
+      <div class="pager" id="pager" hidden>
+        <button id="prevBtn">‹ 上一页</button>
+        <span id="pageInfo"></span>
+        <button id="nextBtn">下一页 ›</button>
+      </div>
+    </div>
+
+    <div class="card" id="detailCard" hidden>
+      <h3>🔎 运行详情 <button id="detailClose" style="float:right">关闭</button></h3>
+      <pre class="json" id="detailBody"></pre>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

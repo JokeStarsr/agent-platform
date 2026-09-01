@@ -1,5 +1,6 @@
 package com.agent.orchestration.agent;
 
+import com.agent.common.PageResult;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -10,6 +11,9 @@ import java.util.Map;
  * v1 同步提交异步执行：submit 返回 runId，进度经 stream() 实时订阅。
  */
 public interface AgentRuntimeService {
+
+    /** 运行列表（租户范围，状态可选筛选，page/size 在 Repository 层 clamp） */
+    PageResult<Map<String, Object>> listRuns(String tenantId, int page, int size, String status);
 
     /** 提交任务，返回 runId（CREATED → 异步 RUNNING） */
     long submit(String tenantId, String appId, String task, AgentConfig config);

@@ -1,5 +1,6 @@
 package com.agent.orchestration.agent;
 
+import com.agent.common.PageResult;
 import com.agent.common.Result;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -23,6 +24,15 @@ public class AgentRunController {
 
     public AgentRunController(AgentRuntimeService agentRuntime) {
         this.agentRuntime = agentRuntime;
+    }
+
+    /** 运行列表（分页，status 可选，默认 / 与 GET /{runId} 由路径区分） */
+    @GetMapping
+    public Result<PageResult<Map<String, Object>>> list(@RequestParam(defaultValue = "1") int page,
+                                                        @RequestParam(defaultValue = "20") int size,
+                                                        @RequestParam(required = false) String status,
+                                                        @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
+        return Result.ok(agentRuntime.listRuns(tenantId, page, size, status));
     }
 
     /** 提交任务，返回 runId（异步执行，进度走 stream） */

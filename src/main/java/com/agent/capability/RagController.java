@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
+import java.util.Map;
+
 /**
  * L4 AI 能力层：RAG 检索 REST 接口
  * <p>
@@ -55,6 +57,12 @@ public class RagController {
     @DeleteMapping("/collections")
     public Result<Void> delete(@RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
         return ragService.delete(tenantId);
+    }
+
+    /** 知识库集合状态（按租户统计，只读） */
+    @GetMapping("/collections")
+    public Result<Map<String, Object>> collections(@RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
+        return ragService.collections(tenantId);
     }
 
     /** 检索请求体 */

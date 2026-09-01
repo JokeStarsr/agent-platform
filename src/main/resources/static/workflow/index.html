@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow 引擎 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L3 编排 · Workflow 引擎</span>
+      <h1>Workflow 引擎</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 内置流程 + 实例监控</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>📋 内置流程</h3>
+      <div id="flows" class="empty">加载中…</div>
+      <pre class="json" id="flowDef" hidden></pre>
+    </div>
+
+    <div class="card">
+      <h3>⏱ 流程实例</h3>
+      <form class="row" id="filterForm">
+        <label>状态
+          <select id="statusSel">
+            <option value="">全部</option>
+            <option>CREATED</option>
+            <option>RUNNING</option>
+            <option>WAITING_APPROVAL</option>
+            <option>COMPLETED</option>
+            <option>FAILED</option>
+            <option>CANCELED</option>
+          </select>
+        </label>
+        <button type="submit" class="primary">查询</button>
+      </form>
+      <table>
+        <thead>
+          <tr><th>实例ID</th><th>应用</th><th>流程</th><th>状态</th><th>创建时间</th><th>结束时间</th></tr>
+        </thead>
+        <tbody id="instTb"></tbody>
+      </table>
+      <div id="empty" class="empty" hidden>暂无实例</div>
+      <div class="pager" id="pager" hidden>
+        <button id="prevBtn">‹ 上一页</button>
+        <span id="pageInfo"></span>
+        <button id="nextBtn">下一页 ›</button>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

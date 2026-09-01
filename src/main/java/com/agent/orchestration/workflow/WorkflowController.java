@@ -1,5 +1,6 @@
 package com.agent.orchestration.workflow;
 
+import com.agent.common.PageResult;
 import com.agent.common.Result;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -36,6 +37,15 @@ public class WorkflowController {
     @GetMapping("/flows/{name}")
     public Result<Map<String, Object>> flowDef(@PathVariable String name) {
         return Result.ok(Map.of("name", name, "flowDef", flows.load(name)));
+    }
+
+    /** 实例列表（分页，status 可选，与 GET /instances/{instanceId} 由路径区分） */
+    @GetMapping("/instances")
+    public Result<PageResult<Map<String, Object>>> list(@RequestParam(defaultValue = "1") int page,
+                                                        @RequestParam(defaultValue = "20") int size,
+                                                        @RequestParam(required = false) String status,
+                                                        @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
+        return Result.ok(workflow.listInstances(tenantId, page, size, status));
     }
 
     /** 启动流程（flowDef 传入 JSON 或 flowRef 引用内置名） */

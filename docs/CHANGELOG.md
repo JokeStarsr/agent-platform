@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-09-02（首页 6 入口落地：管理台页面 + 三个只读接口）
+
+### 起因
+
+用户反馈首页 6 个入口点击后 404 / "系统繁忙" / 裸 JSON，看不到页面内容。诊断为：`/chat/` 静态目录 URL 无 index.html 兜底（Spring Boot 默认行为）；`/api/agent/runs`、`/api/rag/search`、`/api/rag/collections` 只有 POST/DELETE 无 GET，浏览器访问被全局异常兜底成 "系统繁忙"。
+
+### 功能与代码（设计文档 `docs/design/api/20260902-admin-pages.md` 已批准）
+
+- **统一分页 `PageResult<T>`**（`common/PageResult.java`，page/size/total/totalPages/items）
+- **三个只读 GET 接口**：
+  - `GET /api/agent/runs`：运行列表分页/状态筛选（`AgentRunRepository.countRuns/pageRuns`，走 `idx_agent_run_tenant_created`）
+  - `GET /api/workflow/instances`：实例列表分页/状态筛选（`WorkflowRepository.countInstances/pageInstances`，走 `idx_wf_inst_tenant`）
+  - `GET /api/rag/collections`：按租户聚合 `vector_store` 统计（新增 `data/rag/RagCollectionRepository`；`RagService.indexDocument` 切块 metadata 新增 `indexed_at`，存量切片 lastUpdate 为 null）
+- **静态目录修复** `common/StaticViewRedirectConfig`：`/chat/` 等 6 条 `/x/ → index.html` 302（精确路径优先于 `/**` 静态映射）
+- **前端 5 个管理页**（原生 JS + 共享 `static/common.css`，风格对齐 chat 页）：`/workflow/`（流程 + 实例）、`/agent/`（运行列表/提交/取消/重试）、`/memory/`（三级记忆读写演示）、`/rag/`（检索 + 引用/置信度/转人工）、`/collections/`（集合统计 + 上传 + 清空）；首页 6 卡片 href 全部指向新页面
+- **契约测试**：新增 `AgentRunControllerContractTest`、`WorkflowControllerContractTest`；`RagControllerContractTest` 补 collections 用例（19 tests 全绿）
+
+### 实测
+
+- 8085 临时实例验证：6 入口 302 → 正确页面（title 校验）；3 个新接口返回真实数据（agent 4 条运行、workflow 57 实例/12 页、collections 78 切片/4 文档）
+- `indexed_at` 聚合 SQL 用 JDBC 注入测试值验证 `max(metadata->>'indexed_at'::bigint)` 返回正确（验后还原数据）
+- 注：RAG 检索/上传的 401 为验证实例缺真实 LLM key（sub2api 鉴权），非代码问题；8082 正式实例重启后由 IDEA 持有的 key 正常
+
+---
+
 ## 2026-08-31(本地 app LLM 切到 zen + deepseek 禁用)
 
 - **本地 RAG/客服/判分默认走 sub2api→zen 免费通道**：application.yml `spring.ai.openai.base-url` 改为 `${LLM_BASE_URL:http://localhost:8180}`(注意 Spring AI 自动追加 `/v1/chat/completions`，base-url 勿带 `/v1`，否则 `/v1/v1` 404)、`api-key` 用本地 sub2api key、`model` 默认 `claude-sonnet-4-5-20250929`(→zen laguna/big-pickle)

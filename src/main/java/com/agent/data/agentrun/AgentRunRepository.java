@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -79,6 +80,58 @@ public class AgentRunRepository {
     public Optional<RunRow> findRun(long runId) {
         List<RunRow> rows = jdbc.query("SELECT * FROM t_agent_run WHERE run_id = ?", RUN_ROW, runId);
         return rows.stream().findFirst();
+    }
+
+    /** 运行列表行（管理台展示，L3 编排层可见的只读视图） */
+    public record RunListItem(long runId, String appId, String task, String status,
+                              int maxSteps, int stepsDone, int tokensUsed,
+                              Instant createdAt, Instant finishedAt) {
+    }
+
+    private static final RowMapper<RunListItem> RUN_LIST_ITEM = (rs, i) -> new RunListItem(
+            rs.getLong("run_id"),
+            rs.getString("app_id"),
+            rs.getString("task"),
+            rs.getString("status"),
+            rs.getInt("max_steps"),
+            rs.getInt("steps_done"),
+            rs.getInt("tokens_used"),
+            toInstant(rs, "created_at"),
+            toInstant(rs, "finished_at"));
+
+    private static final int MAX_PAGE_SIZE = 100;
+
+    /** 运行总数（租户范围，可选状态筛选） */
+    public long countRuns(String tenantId, String status) {
+        StringBuilder sql = new StringBuilder("SELECT count(*) FROM t_agent_run WHERE tenant_id = ?");
+        List<Object> args = new ArrayList<>();
+        args.add(tenantId);
+        if (status != null && !status.isBlank()) {
+            sql.append(" AND status = ?");
+            args.add(status);
+        }
+        Long n = jdbc.queryForObject(sql.toString(), Long.class, args.toArray());
+        return n == null ? 0 : n;
+    }
+
+    /** 分页运行列表（走 idx_agent_run_tenant_created，page 从 1 起） */
+    public List<RunListItem> pageRuns(String tenantId, int page, int size, String status) {
+        int p = Math.max(page, 1);
+        int sz = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        StringBuilder sql = new StringBuilder("""
+                SELECT run_id, app_id, task, status, max_steps, steps_done, tokens_used, created_at, finished_at
+                FROM t_agent_run WHERE tenant_id = ?
+                """);
+        List<Object> args = new ArrayList<>();
+        args.add(tenantId);
+        if (status != null && !status.isBlank()) {
+            sql.append(" AND status = ?");
+            args.add(status);
+        }
+        sql.append(" ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        args.add(sz);
+        args.add((p - 1) * sz);
+        return jdbc.query(sql.toString(), RUN_LIST_ITEM, args.toArray());
     }
 
     /** 运行状态汇总（详情页展示） */

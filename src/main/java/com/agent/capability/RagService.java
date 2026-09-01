@@ -2,6 +2,7 @@ package com.agent.capability;
 
 import com.agent.common.AuditService;
 import com.agent.common.Result;
+import com.agent.data.rag.RagCollectionRepository;
 import com.agent.model.llm.LlmGateway;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class RagService {
     private final VectorStore vectorStore;
     private final LlmGateway llmGateway;
     private final AuditService auditService;
+    private final RagCollectionRepository collectionRepo;
 
     // L5 转人工门控配置：置信度门控 + 转人工标记（P1 收口，对应 docs/design/api/20260830-handoff-mechanism.md）
     @Value("${app.rag.handoff.threshold:0.25}")
@@ -53,10 +55,29 @@ public class RagService {
             "黑掉", "盗取", "勒索", "入侵系统", "破解密码", "制作病毒", "攻击网站", "诈骗");
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
-    public RagService(VectorStore vectorStore, LlmGateway llmGateway, AuditService auditService) {
+    public RagService(VectorStore vectorStore, LlmGateway llmGateway, AuditService auditService,
+                      RagCollectionRepository collectionRepo) {
         this.vectorStore = vectorStore;
         this.llmGateway = llmGateway;
         this.auditService = auditService;
+        this.collectionRepo = collectionRepo;
+    }
+
+    /** 知识库集合状态（按租户统计 vector_store 聚合，docs/design/api/20260902-admin-pages.md §2.4） */
+    public Result<Map<String, Object>> collections(String tenantId) {
+        try {
+            RagCollectionRepository.CollectionStat s = collectionRepo.statByTenant(tenantId);
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("collectionName", s.collectionName());
+            out.put("tenantId", s.tenantId());
+            out.put("chunkCount", s.chunkCount());
+            out.put("docCount", s.docCount());
+            out.put("lastUpdate", s.lastUpdate() == null ? null : s.lastUpdate().toString());
+            return Result.ok(out);
+        } catch (Exception e) {
+            log.error("集合统计失败: ex={}", e.getMessage(), e);
+            return Result.error(500, "集合统计失败: " + e.getMessage());
+        }
     }
 
     /** 文档入库：Tika 解析 → 按章节切块 → 向量化写入（租户打标） */
@@ -69,6 +90,7 @@ public class RagService {
                 Map<String, Object> meta = new HashMap<>();
                 meta.put("tenant_id", tenantId);
                 meta.put("source", file.getOriginalFilename());
+                meta.put("indexed_at", System.currentTimeMillis());
                 // 按 "## " 章节标题切块：每个策略小节独立成块，保证检索精确命中对应小节
                 for (String section : doc.getText().split("(?=\\n## )")) {
                     String sec = section.trim();

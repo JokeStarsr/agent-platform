@@ -1,6 +1,7 @@
 package com.agent.orchestration.agent;
 
 import com.agent.common.BizException;
+import com.agent.common.PageResult;
 import com.agent.data.agentrun.AgentRunRepository;
 import com.agent.model.llm.LlmGateway;
 import com.agent.tool.ToolEngineService;
@@ -86,6 +87,27 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
     }
 
     /* ---------- 接口实现 ---------- */
+
+    @Override
+    public PageResult<Map<String, Object>> listRuns(String tenantId, int page, int size, String status) {
+        long total = repo.countRuns(tenantId, status);
+        List<Map<String, Object>> items = repo.pageRuns(tenantId, page, size, status).stream()
+                .map(r -> {
+                    Map<String, Object> m = new java.util.LinkedHashMap<>();
+                    m.put("runId", r.runId());
+                    m.put("appId", r.appId());
+                    m.put("task", r.task());
+                    m.put("status", r.status());
+                    m.put("maxSteps", r.maxSteps());
+                    m.put("stepsDone", r.stepsDone());
+                    m.put("tokensUsed", r.tokensUsed());
+                    m.put("createdAt", r.createdAt() == null ? null : r.createdAt().toString());
+                    m.put("finishedAt", r.finishedAt() == null ? null : r.finishedAt().toString());
+                    return m;
+                })
+                .toList();
+        return PageResult.of(page, size, total, items);
+    }
 
     @Override
     public long submit(String tenantId, String appId, String task, AgentConfig config) {

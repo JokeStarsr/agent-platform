@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -122,6 +123,55 @@ public class WorkflowRepository {
     public List<Long> findRunningInstances() {
         return jdbc.query("SELECT instance_id FROM t_workflow_instance WHERE status = 'RUNNING' ORDER BY started_at",
                 (rs, i) -> rs.getLong("instance_id"));
+    }
+
+    /** 实例列表行（管理台展示，只读视图） */
+    public record InstanceListItem(long instanceId, String appId, String flowId, String status,
+                                   String errorMsg, Instant createdAt, Instant finishedAt) {
+    }
+
+    private static final RowMapper<InstanceListItem> INSTANCE_LIST_ITEM = (rs, i) -> new InstanceListItem(
+            rs.getLong("instance_id"),
+            rs.getString("app_id"),
+            rs.getString("flow_id"),
+            rs.getString("status"),
+            rs.getString("error_msg"),
+            toInstant(rs, "created_at"),
+            toInstant(rs, "finished_at"));
+
+    private static final int MAX_PAGE_SIZE = 100;
+
+    /** 实例总数（租户范围，可选状态筛选） */
+    public long countInstances(String tenantId, String status) {
+        StringBuilder sql = new StringBuilder("SELECT count(*) FROM t_workflow_instance WHERE tenant_id = ?");
+        List<Object> args = new ArrayList<>();
+        args.add(tenantId);
+        if (status != null && !status.isBlank()) {
+            sql.append(" AND status = ?");
+            args.add(status);
+        }
+        Long n = jdbc.queryForObject(sql.toString(), Long.class, args.toArray());
+        return n == null ? 0 : n;
+    }
+
+    /** 分页实例列表（走 idx_wf_inst_tenant，page 从 1 起） */
+    public List<InstanceListItem> pageInstances(String tenantId, int page, int size, String status) {
+        int p = Math.max(page, 1);
+        int sz = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        StringBuilder sql = new StringBuilder("""
+                SELECT instance_id, app_id, flow_id, status, error_msg, created_at, finished_at
+                FROM t_workflow_instance WHERE tenant_id = ?
+                """);
+        List<Object> args = new ArrayList<>();
+        args.add(tenantId);
+        if (status != null && !status.isBlank()) {
+            sql.append(" AND status = ?");
+            args.add(status);
+        }
+        sql.append(" ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        args.add(sz);
+        args.add((p - 1) * sz);
+        return jdbc.query(sql.toString(), INSTANCE_LIST_ITEM, args.toArray());
     }
 
     /** 补偿清单增量持久化（引擎在写节点成功后登记，崩溃/重启不丢） */

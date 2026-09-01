@@ -1,6 +1,7 @@
 package com.agent.orchestration.workflow;
 
 import com.agent.common.BizException;
+import com.agent.common.PageResult;
 import com.agent.data.workflow.WorkflowRepository;
 import com.agent.data.workflow.WorkflowRepository.InstanceRow;
 import com.agent.data.workflow.WorkflowRepository.NodeRow;
@@ -79,6 +80,25 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     /* ---------- 接口实现 ---------- */
+
+    @Override
+    public PageResult<Map<String, Object>> listInstances(String tenantId, int page, int size, String status) {
+        long total = repo.countInstances(tenantId, status);
+        List<Map<String, Object>> items = repo.pageInstances(tenantId, page, size, status).stream()
+                .map(r -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("instanceId", r.instanceId());
+                    m.put("appId", r.appId());
+                    m.put("flowId", r.flowId());
+                    m.put("status", r.status());
+                    m.put("errorMsg", r.errorMsg());
+                    m.put("createdAt", r.createdAt() == null ? null : r.createdAt().toString());
+                    m.put("finishedAt", r.finishedAt() == null ? null : r.finishedAt().toString());
+                    return m;
+                })
+                .toList();
+        return PageResult.of(page, size, total, items);
+    }
 
     @Override
     public long start(String tenantId, String appId, String flowDefJson, Map<String, Object> input) {
