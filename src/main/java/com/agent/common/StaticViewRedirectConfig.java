@@ -22,6 +22,7 @@ public class StaticViewRedirectConfig implements WebMvcConfigurer {
                 {"/memory/", "/memory/index.html"},
                 {"/rag/", "/rag/index.html"},
                 {"/collections/", "/collections/index.html"},
+                {"/apps/", "/apps/index.html"},
         };
         for (String[] d : dirs) {
             registry.addViewController(d[0]).setViewName("redirect:" + d[1]);

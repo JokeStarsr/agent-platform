@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-09-02（W09 应用工厂 P0：配置化应用注册 + 管理 API）
+
+### 起因
+
+排期 W09"应用工厂 · 客服迁移 · P2 收口"：平台把"应用"当字符串透传（CS_AGENT/TR_BOOKING），无注册表、Prompt 四处硬编码、工具授权无 per-app 白名单。P0 范围为工厂主体（配置 schema + 校验器 + 启停 API），客服迁移留给 P1 二期。
+
+### 功能与代码（设计文档 `docs/design/api/20260902-app-factory.md` + `docs/design/table/20260902-app-table.md` 均已批准）
+
+- **t_app 表**（`schema-app.sql`）：tenant_id/app_id(UNIQUE)/name/status(CREATED/ENABLED/SUSPATED)/config_json(JSONB)/version/timestamps
+- **八项 config_json schema**：role / prompt(含模板占位符) / kb / tools(白名单+权限) / memory / eval / handoff / quota；含 docs/design 表结构设计（11节完整）
+- **种子应用**：`app-seeds/cs_customer_service.json`（搬运现有 system prompt + handoff 0.25/权重）+ `app-seeds/tr_booking.json`（prompt 模板化 + 8 工具白名单 + quota 25步/60k），启动幂等 upsert（`AppSeedRegistrar`）
+- **AppRegistry**（L3 `orchestration.appfactory`）：@PostConstruct 全量 load → `Map<(tenantId,appId),AppDefinition>`，写 API 后单条 refresh；未知 appId → null（消费点回退现状）
+- **AppValidator**（缺项/工具未注册/PAYMENT禁入白名单/配额越界/handoff阈值校验）
+- **AppController**（`/api/apps` CRUD + `/start|suspend` 启停流；状态流转 409/400/BizException 统一包装）
+- **apps 管理页**（`static/apps/index.html+app.js`，复用 common.css；首页 7 卡片新增应用工厂入口；StaticViewRedirectConfig 加 `/apps/`）
+- **注意**：data 层包名 `com.agent.data.application`（非 `app`），避免 ArchUnit `layer("App").definedBy("..app..")` 正则误匹配 data 层（已修复架构守护测试）
+- **契约测试**：`AppValidatorTest`(11) + `AppRegistryTest`(7) + `AppControllerContractTest`(13) → 99 tests 全绿，ArchUnit 无回归
+
+### 实测（8082 实例端到端验证）
+
+- `/api/apps`（default 租户）：返回 total=2，cs_customer_service + tr_booking 均 status=ENABLED
+- 创建 `it_ops_test` → CREATED → start → ENABLED → suspend → SUSPENDED → re-start → ENABLED（启停流全链路通过）
+- `/apps/` 页面 302→200，渲染应用列表；首页 🏭应用工厂卡片渲染正常
+
+---
+
 ## 2026-09-02（首页 6 入口落地：管理台页面 + 三个只读接口）
 
 ### 起因

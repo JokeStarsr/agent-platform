@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>应用工厂 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L3 编排 · 应用工厂</span>
+      <h1>应用工厂</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 应用 = 场景配置（角色/Prompt/知识库/工具/记忆/评测集/转人工/配额）</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>🆕 新建应用</h3>
+      <form class="row" id="createForm">
+        <input type="text" id="appIdIn" placeholder="appId，如 it_ops" required>
+        <input type="text" id="nameIn" placeholder="应用名" required>
+        <button type="submit" class="primary" id="createBtn">创建（CREATED）</button>
+      </form>
+      <textarea id="configIn" rows="10" placeholder="{&quot;role&quot;:{&quot;name&quot;:&quot;...&quot;},&quot;prompt&quot;:{&quot;system&quot;:&quot;...&quot;},&quot;quota&quot;:{...}}" style="margin-top:10px"></textarea>
+      <div class="sub">配置 JSON 必填八项中的 role.name / prompt.system / quota</div>
+    </div>
+
+    <div class="card">
+      <h3>📦 应用列表</h3>
+      <table>
+        <thead>
+          <tr><th>appId</th><th>名称</th><th>状态</th><th>版本</th><th>配置</th><th>操作</th></tr>
+        </thead>
+        <tbody id="tb"></tbody>
+      </table>
+      <div id="empty" class="empty" hidden>暂无应用</div>
+      <div class="pager" id="pager" hidden>
+        <button id="prevBtn">‹ 上一页</button>
+        <span id="pageInfo"></span>
+        <button id="nextBtn">下一页 ›</button>
+      </div>
+    </div>
+
+    <pre class="json" id="cfgBody" hidden></pre>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

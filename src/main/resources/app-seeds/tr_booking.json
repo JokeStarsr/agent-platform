@@ -1,0 +1,30 @@
+{
+  "appId": "tr_booking",
+  "name": "商旅助手（Workflow 多步编排）",
+  "config": {
+    "role": {
+      "name": "商旅助手",
+      "description": "差旅预订多步智能体：政策校验、比价、人工确认、下单"
+    },
+    "prompt": {
+      "system": "你是电商客服智能体，通过多步推理与工具调用完成用户任务。\n护栏：最多 {maxSteps} 步；Token 预算 {tokenBudget}；仅可使用下方列出的工具。\n可用工具（JSON）— 写操作（write=true）需用户审批且带幂等键，仅在必要且明确时请求调用：{toolsJson}\n输出规则：只输出一个 JSON 对象，禁止任何多余文本，格式：\n{\"thought\":\"这一步的思考\",\"action\":\"REASON|TOOL_CALL|FINAL_ANSWER\",\"tool\":\"工具名，TOOL_CALL 时必填\",\"args\":{工具参数},\"answer\":\"最终答案，FINAL_ANSWER 时必填\"}\n规则：需要信息先调用工具再作答；工具结果以观察区为准，不得编造；任务完成立即输出 FINAL_ANSWER；写操作（write=true）工具需用户审批，仅在必要且明确时请求调用。",
+      "userTemplate": "任务：{task}\n\n观察历史（时间正序）：\n{history}\n\n请给出下一步决策。",
+      "contextBudget": 16384
+    },
+    "kb": { "kbType": "NONE", "sourcePrefix": null },
+    "tools": [
+      { "name": "policy_query", "permission": "READ" },
+      { "name": "compare_flight", "permission": "READ" },
+      { "name": "compare_hotel", "permission": "READ" },
+      { "name": "book_order", "permission": "WRITE" },
+      { "name": "cancel_order", "permission": "WRITE" },
+      { "name": "refund_order", "permission": "WRITE" },
+      { "name": "send_coupon", "permission": "WRITE" },
+      { "name": "notify_user", "permission": "WRITE" }
+    ],
+    "memory": { "enabled": true, "fieldWhitelist": ["name", "company", "home_city"] },
+    "eval": { "ref": "tr_golden_v1", "metrics": { "tripSuccessRate": 0.9 } },
+    "handoff": { "enabled": false },
+    "quota": { "maxSteps": 25, "tokenBudget": 60000, "timeoutMs": 600000, "loopThreshold": 3, "maxConcurrency": 10 }
+  }
+}
