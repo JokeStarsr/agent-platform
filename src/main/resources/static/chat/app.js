@@ -42,7 +42,7 @@
     const resp = await fetch('/api/rag/search/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Tenant-Id': 'default', 'Accept': 'text/event-stream' },
-      body: JSON.stringify({ query: q, topK: 5 }),
+      body: JSON.stringify({ query: q, topK: 5, appId: 'cs_customer_service' }),
     });
     if (!resp.ok || !resp.body) throw new Error('请求失败 HTTP ' + resp.status);
     const reader = resp.body.getReader();

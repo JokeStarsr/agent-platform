@@ -36,6 +36,7 @@ public class ToolEngineServiceImpl implements ToolEngineService {
 
     private final ToolRegistry registry;
     private final ToolInvocationRepository repo;
+    private final AppToolGate appToolGate; // 可选注入；无实现 bean 时为 null，不拦截
 
     // 单例守护调度线程：超时兜底/并发等待轮询
     private final ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -44,9 +45,11 @@ public class ToolEngineServiceImpl implements ToolEngineService {
         return t;
     });
 
-    public ToolEngineServiceImpl(ToolRegistry registry, ToolInvocationRepository repo) {
+    public ToolEngineServiceImpl(ToolRegistry registry, ToolInvocationRepository repo,
+                                    @org.springframework.beans.factory.annotation.Autowired(required = false) AppToolGate appToolGate) {
         this.registry = registry;
         this.repo = repo;
+        this.appToolGate = appToolGate;
     }
 
     @Override
@@ -54,6 +57,11 @@ public class ToolEngineServiceImpl implements ToolEngineService {
         AgentTool tool = registry.resolve(req.tool())
                 .orElseThrow(() -> new BizException(404, "工具未注册: " + req.tool()));
         ToolMeta meta = registry.metaOf(req.tool()).orElseThrow();
+
+        // P1 二期：应用工具白名单门控（§2.5）— 注册 app 且工具不在白名单 → 403；未注册 app → 放行
+        if (appToolGate != null) {
+            appToolGate.checkToolAllowed(tenantId, appId, req.tool());
+        }
 
         if (meta.permission() == ToolPermission.PAYMENT) {
             throw new BizException(403, "支付级工具未开放：本期仅注册不放开");

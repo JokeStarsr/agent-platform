@@ -23,7 +23,7 @@ class PaymentGateTest {
     @Test
     void 支付工具_任何路径调用均403() {
         ToolRegistry registry = new ToolRegistry(List.of(new PayOrderTool()));
-        ToolEngineServiceImpl engine = new ToolEngineServiceImpl(registry, mock(ToolInvocationRepository.class));
+        ToolEngineServiceImpl engine = new ToolEngineServiceImpl(registry, mock(ToolInvocationRepository.class), null);
 
         BizException e = assertThrows(BizException.class,
                 () -> engine.invoke("default", "TR_DEMO", new InvokeRequest("pay_order", Map.of("orderId", "O1"), null)));

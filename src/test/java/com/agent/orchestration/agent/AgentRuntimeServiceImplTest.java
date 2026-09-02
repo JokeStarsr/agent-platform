@@ -2,6 +2,7 @@ package com.agent.orchestration.agent;
 
 import com.agent.data.agentrun.AgentRunRepository;
 import com.agent.model.llm.LlmGateway;
+import com.agent.orchestration.appfactory.AppRegistry;
 import com.agent.tool.AgentTool;
 import com.agent.tool.ToolEngineService;
 import com.agent.tool.ToolEngineService.InvokeRequest;
@@ -57,7 +58,7 @@ class AgentRuntimeServiceImplTest {
                     return ToolInvokeResult.ok(Map.of("result", "ok", "coupon", "已发放"));
                 });
         ToolRegistry registry = new ToolRegistry(List.of(new OrderQueryToolStub(), new SendCouponToolStub()));
-        cut = new AgentRuntimeServiceImpl(repo, llm, toolEngine, registry);
+        cut = new AgentRuntimeServiceImpl(repo, llm, toolEngine, registry, mock(AppRegistry.class));
     }
 
     @AfterEach

@@ -42,8 +42,8 @@ public class AppRegistry {
         Map<AppKey, AppDefinition> next = new HashMap<>();
         int enabled = 0;
         for (AppRow row : repo.listAll()) {
-            next.put(new AppKey(row.tenantId(), row.appId()),
-                    AppDefinition.parse(row.appId(), row.name(), row.configJson()));
+            AppDefinition d = AppDefinition.parse(row.appId(), row.name(), row.configJson()).withStatus(row.status());
+            next.put(new AppKey(row.tenantId(), row.appId()), d);
             if ("ENABLED".equals(row.status())) {
                 enabled++;
             }
@@ -59,7 +59,7 @@ public class AppRegistry {
             next.entrySet().removeIf(e -> e.getKey().tenantId().equals(tenantId) && e.getKey().appId().equals(appId));
             repo.findByAppId(tenantId, appId).ifPresent(row ->
                     next.put(new AppKey(row.tenantId(), row.appId()),
-                            AppDefinition.parse(row.appId(), row.name(), row.configJson())));
+                            AppDefinition.parse(row.appId(), row.name(), row.configJson()).withStatus(row.status())));
             cache = Map.copyOf(next);
         }
     }

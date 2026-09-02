@@ -52,7 +52,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     private static final Set<Integer> RETRYABLE_TOOL_CODES = Set.of(504, 409);
     private static final int TOOL_RETRY_MAX = 1;
     private static final int LLM_RETRY_MAX = 3;                       // LLM 空输出/异常短退避重试（zen 通道抖动，W8 成功率优化）
-    private static final String LLM_SYSTEM = "你是工作流中的 LLM 生成节点，严格按要求输出。";
+    private static final String LLM_SYSTEM = com.agent.orchestration.appfactory.PromptCenter.defaultPrompt("workflow-llm-node");
     private static final long DEFAULT_HUMAN_ESCALATE_MS = 30 * 60_000L;
     private static final String REJECTED_REASON = "REJECTED_HUMAN";
 

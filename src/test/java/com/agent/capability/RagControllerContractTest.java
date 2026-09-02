@@ -50,7 +50,7 @@ class RagControllerContractTest {
 
     @Test
     void search_合法请求_返回Result包装与转人工三字段() throws Exception {
-        when(ragService.search("7天内能退货吗", 5, "tenant-x")).thenReturn(Result.ok(okResult()));
+        when(ragService.search("7天内能退货吗", 5, "tenant-x", null)).thenReturn(Result.ok(okResult()));
 
         mockMvc.perform(post("/api/rag/search")
                         .header("X-Tenant-Id", "tenant-x")
@@ -68,7 +68,7 @@ class RagControllerContractTest {
 
     @Test
     void search_缺X_Tenant_Id_回退default租户() throws Exception {
-        when(ragService.search(anyString(), anyInt(), eq("default"))).thenReturn(Result.ok(okResult()));
+        when(ragService.search(anyString(), anyInt(), eq("default"), any())).thenReturn(Result.ok(okResult()));
 
         mockMvc.perform(post("/api/rag/search")
                         .contentType("application/json")
@@ -98,7 +98,7 @@ class RagControllerContractTest {
 
     @Test
     void search_topK缺省_默认5() throws Exception {
-        when(ragService.search("退货", 5, "default")).thenReturn(Result.ok(okResult()));
+        when(ragService.search("退货", 5, "default", null)).thenReturn(Result.ok(okResult()));
 
         mockMvc.perform(post("/api/rag/search")
                         .contentType("application/json")
@@ -109,7 +109,7 @@ class RagControllerContractTest {
 
     @Test
     void search_服务抛业务异常_统一Result错误包装() throws Exception {
-        when(ragService.search(anyString(), anyInt(), anyString()))
+        when(ragService.search(anyString(), anyInt(), anyString(), any()))
                 .thenThrow(new BizException(5001, "检索管道异常"));
 
         mockMvc.perform(post("/api/rag/search")

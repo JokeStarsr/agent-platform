@@ -41,6 +41,7 @@ public class AppDefinition {
 
     private final String appId;
     private final String name;
+    private final String status;
     private final Role role;
     private final Prompt prompt;
     private final Kb kb;
@@ -51,11 +52,12 @@ public class AppDefinition {
     private final Quota quota;
     private final String rawConfigJson;
 
-    public AppDefinition(String appId, String name, Role role, Prompt prompt, Kb kb,
+    public AppDefinition(String appId, String name, String status, Role role, Prompt prompt, Kb kb,
                          List<ToolItem> tools, Memory memory, Eval eval, Handoff handoff,
                          Quota quota, String rawConfigJson) {
         this.appId = appId;
         this.name = name;
+        this.status = status;
         this.role = role;
         this.prompt = prompt;
         this.kb = kb;
@@ -123,7 +125,7 @@ public class AppDefinition {
                         q.path("timeoutMs").asInt(300000), q.path("loopThreshold").asInt(3),
                         q.path("maxConcurrency").asInt(5));
             }
-            return new AppDefinition(appId, name, role, prompt, kb, tools, memory, eval, handoff, quota, configJson);
+            return new AppDefinition(appId, name, null, role, prompt, kb, tools, memory, eval, handoff, quota, configJson);
         } catch (Exception e) {
             throw new IllegalStateException("应用配置解析失败: " + e.getMessage(), e);
         }
@@ -139,6 +141,14 @@ public class AppDefinition {
 
     public String name() {
         return name;
+    }
+
+    public String status() {
+        return status;
+    }
+
+    public AppDefinition withStatus(String status) {
+        return new AppDefinition(appId, name, status, role, prompt, kb, tools, memory, eval, handoff, quota, rawConfigJson);
     }
 
     public Role role() {

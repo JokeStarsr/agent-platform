@@ -29,21 +29,22 @@ public class RagController {
         this.ragService = ragService;
     }
 
-    /** 在线检索：查询改写 → 混合检索 → 重排 → Top-K → 生成 + 引用溯源 */
+    /** 在线检索：查询改写 → 混合检索 → 重排 → Top-K → 生成 + 引用溯源（P1 二期：增加可选 appId） */
     @PostMapping("/search")
     public Result<RagResult> search(@Valid @RequestBody SearchRequest req,
                                     @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
-        return ragService.search(req.query(), req.topK(), tenantId);
+        return ragService.search(req.query(), req.topK(), tenantId, req.appId());
     }
 
     /** SSE 流式检索（P1 收口 #2）：检索 → 逐 token 生成 → done 元数据。
      *  每行一个紧凑 JSON（type=retrieval/answer/done/error），前端按 type 分发。
      *  对应设计文档 docs/design/api/20260830-rag-stream.md
+     *  P1 二期：增加可选 appId 参数，空串回退 yml 兜底。
      */
     @PostMapping(value = "/search/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> searchStream(@Valid @RequestBody SearchRequest req,
                                      @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
-        return ragService.streamSearch(req.query(), req.topK(), tenantId);
+        return ragService.streamSearch(req.query(), req.topK(), tenantId, req.appId());
     }
 
     /** 文档入库：Tika 解析 → 语义切块 → 向量化 → 写入租户 Collection */
@@ -65,11 +66,12 @@ public class RagController {
         return ragService.collections(tenantId);
     }
 
-    /** 检索请求体 */
+    /** 检索请求体（P1 二期：增加可选 appId；空串回退 yml 兜底配置） */
     public record SearchRequest(@NotBlank(message = "query 不能为空") String query,
                                 @Min(value = 1, message = "topK 最小为 1")
                                 @Max(value = 20, message = "topK 最大为 20")
-                                Integer topK) {
+                                Integer topK,
+                                String appId) {
         public SearchRequest {
             if (topK == null) {
                 topK = 5;

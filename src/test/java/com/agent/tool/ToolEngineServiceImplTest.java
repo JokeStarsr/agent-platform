@@ -61,7 +61,7 @@ class ToolEngineServiceImplTest {
         ToolRegistry registry = new ToolRegistry(List.of(
                 new QueryToolStub(), new CouponToolStub(), new RefundToolStub(), new PaymentToolStub(),
                 new SlowWriteToolStub()));
-        engine = new ToolEngineServiceImpl(registry, repo);
+        engine = new ToolEngineServiceImpl(registry, repo, null);
     }
 
     /* ---------- TC-1 幂等重放 ---------- */

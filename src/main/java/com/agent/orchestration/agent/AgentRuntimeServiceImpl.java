@@ -4,6 +4,10 @@ import com.agent.common.BizException;
 import com.agent.common.PageResult;
 import com.agent.data.agentrun.AgentRunRepository;
 import com.agent.model.llm.LlmGateway;
+import com.agent.orchestration.appfactory.AppAssembler;
+import com.agent.orchestration.appfactory.AppDefinition;
+import com.agent.orchestration.appfactory.AppRegistry;
+import com.agent.orchestration.appfactory.PromptCenter;
 import com.agent.tool.ToolEngineService;
 import com.agent.tool.ToolMeta;
 import com.agent.tool.ToolRegistry;
@@ -54,6 +58,7 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
     private final LlmGateway llm;
     private final ToolEngineService toolEngine;
     private final ToolRegistry toolRegistry;
+    private final AppRegistry appRegistry;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(4, r -> {
         Thread t = new Thread(r, "agent-runtime");
@@ -69,11 +74,13 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
     private final Map<Long, Map<String, String>> decisionKeys = new ConcurrentHashMap<>();
 
     public AgentRuntimeServiceImpl(AgentRunRepository repo, LlmGateway llm,
-                                   ToolEngineService toolEngine, ToolRegistry toolRegistry) {
+                                   ToolEngineService toolEngine, ToolRegistry toolRegistry,
+                                   AppRegistry appRegistry) {
         this.repo = repo;
         this.llm = llm;
         this.toolEngine = toolEngine;
         this.toolRegistry = toolRegistry;
+        this.appRegistry = appRegistry;
     }
 
     /** 重启后 WAITING_APPROVAL 的 run 审批 future 丢失，置 FAILED 避免永久挂起 */
@@ -117,14 +124,19 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
         if (task == null || task.isBlank()) {
             throw new BizException(400, "任务不能为空");
         }
-        AgentConfig c = config != null ? config : AgentConfig.of(appId);
+        // P1 二期：应用配置优先（§2.5 — SUSPENDED 拒绝，config==null 时用应用配额）
+        AppDefinition appDef = (appId == null || appId.isBlank()) ? null : appRegistry.get(tenantId, appId);
+        if (appDef != null && "SUSPENDED".equals(appDef.status())) {
+            throw new BizException(409, "应用已停用（" + appId + "），请先启用");
+        }
+        AgentConfig c = config != null ? config : AppAssembler.toAgentConfig(appDef, appId);
         if (repo.countRunning(tenantId) >= c.maxConcurrency()) {
             throw new BizException(429, "该租户达到并发执行上限（" + c.maxConcurrency() + "），请稍后再试");
         }
         String traceId = UUID.randomUUID().toString();
         long runId = repo.createRun(tenantId, appId, task, AgentRunStatus.CREATED.name(),
                 c.maxSteps(), c.tokenBudget(), c.timeoutMs(), c.loopThreshold(), traceId);
-        executor.submit(() -> executeLoop(runId, tenantId, appId, task, c, traceId));
+        executor.submit(() -> executeLoop(runId, tenantId, appId, task, appDef, c, traceId));
         return runId;
     }
 
@@ -192,7 +204,8 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
 
     /* ---------- 核心循环 ---------- */
 
-    private void executeLoop(long runId, String tenantId, String appId, String task, AgentConfig c, String traceId) {
+    private void executeLoop(long runId, String tenantId, String appId, String task,
+                             AppDefinition appDef, AgentConfig c, String traceId) {
         long startNs = System.nanoTime();
         int steps = 0;
         int tokens = 0;
@@ -230,7 +243,9 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
                 AgentStepIntent intent;
                 long t0 = System.nanoTime();
                 try {
-                    intent = llm.generateStructured(buildSystemPrompt(c), buildUserPrompt(task, history), AgentStepIntent.class);
+                    String sys = buildSystemPrompt(appDef, c);
+                    String usr = buildUserPrompt(appDef, task, history);
+                    intent = llm.generateStructured(sys, usr, AgentStepIntent.class);
                 } catch (Exception e) {
                     llmFails++;
                     log.warn("agent run {} LLM 调用失败({}/{}): {}", runId, llmFails, LLM_FAIL_MAX, e.getMessage());
@@ -444,7 +459,21 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
 
     /* ---------- Prompt 组装 ---------- */
 
-    private String buildSystemPrompt(AgentConfig c) {
+    private String buildSystemPrompt(AppDefinition appDef, AgentConfig c) {
+        // P1 二期：应用配置驱动（§2.5）— 有 app prompt 用渲染后的；否则回退硬编码
+        if (appDef != null && appDef.prompt() != null && appDef.prompt().system() != null) {
+            String rendered = AppAssembler.renderSystemPrompt(appDef);
+            // 补充工具列表（seed prompt 用 {toolsJson} 占位符，AppAssembler 已处理；此处兜底追加工具列表段）
+            String toolsJson = toJson(toolRegistry.listTools().stream()
+                    .map(t -> Map.<String, Object>of("name", t.name(), "description", t.description(),
+                            "args_schema", t.parameters(), "write", t.isWrite()))
+                    .toList());
+            return rendered + "\n可用工具（JSON）— 写操作（write=true）需用户审批且带幂等键：" + toolsJson
+                    + "\n输出规则：只输出一个 JSON 对象，禁止任何多余文本，格式：\n"
+                    + "{\"thought\":\"这一步的思考\",\"action\":\"REASON|TOOL_CALL|FINAL_ANSWER\","
+                    + "\"tool\":\"工具名，TOOL_CALL 时必填\",\"args\":{工具参数},\"answer\":\"最终答案，FINAL_ANSWER 时必填\"}";
+        }
+        // 回退：原有硬编码（无应用配置的旧路径）
         StringBuilder sb = new StringBuilder();
         sb.append("你是电商客服智能体，通过多步推理与工具调用完成用户任务。\n")
                 .append("护栏：最多 ").append(c.maxSteps()).append(" 步；Token 预算 ").append(c.tokenBudget())
@@ -464,10 +493,13 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
         return sb.toString();
     }
 
-    private String buildUserPrompt(String task, List<String> history) {
+    private String buildUserPrompt(AppDefinition appDef, String task, List<String> history) {
+        String histStr = history.isEmpty() ? "（无）" : String.join("\n", history);
+        if (appDef != null && appDef.prompt() != null && appDef.prompt().userTemplate() != null) {
+            return PromptCenter.render(appDef.prompt().userTemplate(), Map.of("task", task, "history", histStr));
+        }
         return "任务：" + task + "\n\n观察历史（时间正序）：\n"
-                + (history.isEmpty() ? "（无）" : String.join("\n", history))
-                + "\n\n请给出下一步决策。";
+                + histStr + "\n\n请给出下一步决策。";
     }
 
     /** 写操作决策级幂等键：同一决策循环内重试复用；fresh=true 表示键冲突后换新键 */

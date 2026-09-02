@@ -32,6 +32,7 @@ public class RagService {
     private final LlmGateway llmGateway;
     private final AuditService auditService;
     private final RagCollectionRepository collectionRepo;
+    private final AppPromptProvider appPromptProvider;
 
     // L5 转人工门控配置：置信度门控 + 转人工标记（P1 收口，对应 docs/design/api/20260830-handoff-mechanism.md）
     @Value("${app.rag.handoff.threshold:0.25}")
@@ -56,11 +57,31 @@ public class RagService {
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     public RagService(VectorStore vectorStore, LlmGateway llmGateway, AuditService auditService,
-                      RagCollectionRepository collectionRepo) {
+                      RagCollectionRepository collectionRepo, AppPromptProvider appPromptProvider) {
         this.vectorStore = vectorStore;
         this.llmGateway = llmGateway;
         this.auditService = auditService;
         this.collectionRepo = collectionRepo;
+        this.appPromptProvider = appPromptProvider;
+    }
+
+    /** 应用级转人工参数（P1 二期：应用配置开启 handoff 时覆盖 yml 默认值） */
+    private record HandoffEff(double threshold, double wr, double wc, double wcit) {
+    }
+
+    /** 解析应用转人工参数；应用未启用或其配置缺失时返回 yml @Value 默认 */
+    private HandoffEff effectiveHandoff(AppPromptProvider.AppPrompt app) {
+        Number thr = app.handoffThreshold();
+        double threshold = thr == null ? handoffThreshold : thr.doubleValue();
+        Map<String, Object> w = app.handoffWeights();
+        double wr = w == null ? wRetrieval : num(w.get("retrieval"), wRetrieval);
+        double wc = w == null ? wCoverage : num(w.get("coverage"), wCoverage);
+        double wcit = w == null ? wCitation : num(w.get("citation"), wCitation);
+        return new HandoffEff(threshold, wr, wc, wcit);
+    }
+
+    private static double num(Object o, double def) {
+        return o instanceof Number n ? n.doubleValue() : (o instanceof String s ? Double.parseDouble(s) : def);
     }
 
     /** 知识库集合状态（按租户统计 vector_store 聚合，docs/design/api/20260902-admin-pages.md §2.4） */
@@ -115,10 +136,15 @@ public class RagService {
      * 双管道协同：查询改写 → 混合检索 → 重排 → Top-K 注入 → 生成 + 引用溯源。
      * 对应ADS 5.1关键链路设计。
      */
-    public Result<RagResult> search(String query, int topK, String tenantId) {
+    public Result<RagResult> search(String query, int topK, String tenantId, String appId) {
         long startNs = System.nanoTime();
 
         try {
+            AppPromptProvider.AppPrompt app = appPromptProvider.resolve(tenantId, appId);
+            HandoffEff he = app.handoffEnabled() ? effectiveHandoff(app) : null;
+            String baseSystem = (app.systemPrompt() != null && !app.systemPrompt().isBlank())
+                    ? app.systemPrompt() : buildSystemPrompt();
+
             /** 阶段1：查询改写 - 指代消解/多路改写 */
             // QueryRewrite 是 static inner class，直接用字段访问
             QueryRewrite rewrite = rewriteQuery(query);
@@ -138,7 +164,7 @@ public class RagService {
                     .collect(Collectors.toList());
 
             /** 阶段5：生成 + 引用溯源 */
-            RagResult result = generateWithCitations(selected, query, tenantId);
+            RagResult result = generateWithCitations(selected, query, baseSystem, he);
 
             long durMs = (System.nanoTime() - startNs) / 1_000_000;
             result.setLatencyMs((int) durMs);
@@ -221,9 +247,9 @@ public class RagService {
                 .collect(Collectors.toList());
     }
 
-    /** 生成 + 引用溯源 */
-    private RagResult generateWithCitations(List<ScoredChunk> selectedChunks, String query, String tenantId) {
-        GenerationPrompts prompts = buildGenerationPrompts(selectedChunks, query);
+    private RagResult generateWithCitations(List<ScoredChunk> selectedChunks, String query,
+                                             String baseSystem, HandoffEff he) {
+        GenerationPrompts prompts = buildGenerationPrompts(selectedChunks, query, baseSystem);
         String answer = llmGatewayGenerate(prompts.systemPrompt(), prompts.userPrompt());
 
         List<String> sourceChunks = selectedChunks.stream()
@@ -231,12 +257,12 @@ public class RagService {
                 .collect(Collectors.toList());
 
         RagResult result = new RagResult(answer, prompts.citations(), sourceChunks);
-        computeHandoff(result, selectedChunks, query, answer);
+        computeHandoff(result, selectedChunks, query, answer, he);
         return result;
     }
 
     /** 构建生成 Prompt（含引用上下文），同步/流式共用 */
-    private GenerationPrompts buildGenerationPrompts(List<ScoredChunk> selectedChunks, String query) {
+    private GenerationPrompts buildGenerationPrompts(List<ScoredChunk> selectedChunks, String query, String baseSystem) {
         StringBuilder contextBuilder = new StringBuilder();
         List<String> citations = new ArrayList<>();
         for (int i = 0; i < selectedChunks.size(); i++) {
@@ -245,7 +271,7 @@ public class RagService {
             contextBuilder.append(citationRef).append(" ").append(chunk.getContent()).append("\n");
             citations.add(citationRef + ": " + (chunk.getSource() != null ? chunk.getSource() : "知识库切片"));
         }
-        String systemPrompt = buildSystemPrompt() + "\n" + contextBuilder.toString();
+        String systemPrompt = baseSystem + "\n" + contextBuilder.toString();
         String userPrompt = "基于以上上下文，回答用户问题。要求：1) 只基于提供的上下文回答，不外推，但上下文中与问题直接相关的信息（政策/流程/费用等）都应如实整理作答，不得因缺少专门的操作指引表述而拒答；2) 仅当上下文中确实不存在任何与问题相关的信息时，才诚实回答“我不知道”并建议转人工；3) 必须对每个关键结论用【1】、【2】…标注引用，编号按上下文切片出现顺序从【1】开始连续递增，禁止使用文档章节号（如【2.7】）；4) 置信度低时须明确说明。\n\n用户问题：" + query;
         return new GenerationPrompts(systemPrompt, userPrompt, citations);
     }
@@ -257,15 +283,20 @@ public class RagService {
      *  检索同步 → retrieval 事件 → 逐 token answer 事件（记 firstTokenMs）→ done 事件（置信度/转人工）。
      *  每行一个紧凑 JSON，前端按 type 字段分发。
      */
-    public Flux<String> streamSearch(String query, int topK, String tenantId) {
+    public Flux<String> streamSearch(String query, int topK, String tenantId, String appId) {
         return Flux.defer(() -> {
             long startNs = System.nanoTime();
             try {
+                AppPromptProvider.AppPrompt app = appPromptProvider.resolve(tenantId, appId);
+                HandoffEff he = app.handoffEnabled() ? effectiveHandoff(app) : null;
+                String baseSystem = (app.systemPrompt() != null && !app.systemPrompt().isBlank())
+                        ? app.systemPrompt() : buildSystemPrompt();
+
                 QueryRewrite rewrite = rewriteQuery(query);
                 List<ScoredChunk> hybrid = hybridSearch(rewrite.rewritten, tenantId, rewrite.variants, topK);
                 List<ScoredChunk> selected = rerankChunks(hybrid, query, tenantId).stream()
                         .limit(topK).collect(Collectors.toList());
-                GenerationPrompts prompts = buildGenerationPrompts(selected, query);
+                GenerationPrompts prompts = buildGenerationPrompts(selected, query, baseSystem);
                 List<String> sourceChunks = selected.stream()
                         .map(ScoredChunk::getContent).collect(Collectors.toList());
 
@@ -295,7 +326,7 @@ public class RagService {
                             long latencyMs = (System.nanoTime() - startNs) / 1_000_000;
                             String fullAnswer = answerBuf.toString();
                             RagResult r = new RagResult(fullAnswer, prompts.citations(), sourceChunks);
-                            computeHandoff(r, selected, query, fullAnswer);
+                            computeHandoff(r, selected, query, fullAnswer, he);
                             auditService.log(tenantId, query, topK, selected.size(), sources,
                                     latencyMs, firstTokenMs[0], r.isNeedsHandoff(), r.getHandoffReason(),
                                     r.getConfidenceScore(), fullAnswer.length());
@@ -344,27 +375,30 @@ public class RagService {
         }
     }
 
-    /** 置信度门控 + 转人工标记（对应 docs/design/api/20260830-handoff-mechanism.md §2）
-     *  纯启发式合成，零额外 LLM 调用：检索相似度*0.55 + 关键词覆盖*0.25 + 引用完整率*0.20。
-     */
-    private void computeHandoff(RagResult result, List<ScoredChunk> selectedChunks, String query, String answer) {
+    private void computeHandoff(RagResult result, List<ScoredChunk> selectedChunks, String query, String answer,
+                                HandoffEff he) {
+        double thr = he == null ? handoffThreshold : he.threshold();
+        double wr = he == null ? wRetrieval : he.wr();
+        double wc = he == null ? wCoverage : he.wc();
+        double wcit = he == null ? wCitation : he.wcit();
+
         double retrievalScore = selectedChunks.isEmpty()
                 ? 0.0 : Math.max(0.0, Math.min(1.0,
                 selectedChunks.stream().mapToDouble(ScoredChunk::getScore).max().orElse(0.0)));
         double coverageScore = selectedChunks.isEmpty() ? 0.0 : coverageScore(query, selectedChunks.get(0).getContent());
         double citationScore = (answer != null && answer.matches(".*【[\\d.]+】.*")) ? 1.0 : 0.0;
 
-        double confidence = wRetrieval * retrievalScore + wCoverage * coverageScore + wCitation * citationScore;
+        double confidence = wr * retrievalScore + wc * coverageScore + wcit * citationScore;
         confidence = Math.max(0.0, Math.min(1.0, confidence));
 
         boolean sensitive = hasSensitiveIntent(query);
         boolean noRetrieval = selectedChunks.isEmpty();
         boolean refused = hasRefusalSignal(answer);
-        boolean needsHandoff = sensitive || noRetrieval || refused || confidence < handoffThreshold;
+        boolean needsHandoff = sensitive || noRetrieval || refused || confidence < thr;
         String reason = sensitive ? "SENSITIVE"
                 : (noRetrieval ? "NO_RETRIEVAL"
                 : (refused ? "REFUSAL"
-                : (confidence < handoffThreshold ? "LOW_CONFIDENCE" : "NONE")));
+                : (confidence < thr ? "LOW_CONFIDENCE" : "NONE")));
 
         result.setConfidenceScore(confidence);
         result.setNeedsHandoff(needsHandoff);

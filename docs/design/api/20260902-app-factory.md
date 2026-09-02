@@ -99,7 +99,19 @@
 - [x] AppDefinition/AppSeedRegistrar（app-seeds ×2）/AppRegistry/AppAssembler/AppValidator
 - [x] AppController + static/apps 页 + StaticViewRedirectConfig 加 /apps/ + 首页入口卡片
 - [x] AppValidatorTest/AppRegistryTest/AppControllerContractTest + ArchitectureTest 回归（99/99 绿）
-- [ ] P1 二期：消费点改造 + 双跑（另行计划）
+- [x] P1 二期：消费点改造 + 双跑（2026-09-03 完成，见下）
+
+**P1 二期落地记录（与该文档 §2.5 契约一致）**：
+- 跨层消费用**依赖反转接口**（ArchitectureTest 零改动仍 4/4 绿）：`com.agent.capability.AppPromptProvider`（L4 接口 → L3 `OrchAppPromptProvider` 实现）、`com.agent.tool.AppToolGate`（L5 接口 → L3 `AppToolGateImpl` 实现，@Autowired(required=false) 可选注入）
+- AgentRuntimeServiceImpl：submit 查 AppRegistry → SUSPENDED 409"应用已停用"；config==null 时 AppAssembler.toAgentConfig 装配应用配额；executeLoop 用应用 prompt.system/userTemplate 渲染（{maxSteps}/{tokenBudget}/{toolsJson}），无应用回退原硬编码
+- RagService：search/streamSearch 增 appId 参数（空回退 yml）；应用 handoff 参数覆盖 @Value 默认（阈值+权重）
+- RagController：SearchRequest 增可选 appId；客服前端 static/chat 已带 appId=cs_customer_service
+- ToolEngineServiceImpl：invoke 前置 AppToolGate（注册 app 且工具不在白名单 → 403；未注册/空白名单放行）
+- ContextController：assemble 的 SYSTEM 取应用 prompt（appId 非空时），回退 DEFAULT_SYSTEM
+- WorkflowServiceImpl：LLM_SYSTEM 常量改为 PromptCenter.defaultPrompt("workflow-llm-node")
+- AppDefinition 增 status 字段（withStatus）承载启停状态
+- 双跑脚本 `scripts/eval/cs_dual_compare.py`：同一 golden-set 两链路（legacy vs app）对比；冒烟 6 条：handoff 翻转率 0%（闸门 ≤20%）、引用集一致、答案字符串差异均为 LLM 措辞非确定性（抽查语义等价）。全量 92 条双跑留给回归期执行
+- 测试：109 全绿（新增 AgentRuntimeAppFactoryTest 2 / AppToolGateImplTest 4 / OrchAppPromptProviderTest 4）
 
 ## 7. 变更历史
 

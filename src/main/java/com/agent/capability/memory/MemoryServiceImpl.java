@@ -129,7 +129,7 @@ public class MemoryServiceImpl implements MemoryService {
         if (ragService == null) {
             return Map.of("available", false, "message", "RAG 未启用");
         }
-        var r = ragService.search(query, topK, tenantId);
+        var r = ragService.search(query, topK, tenantId, null);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("code", r.getData() == null ? r.getCode() : 0);
         out.put("answer", r.getData() == null ? r.getMessage() : r.getData().getAnswer());
