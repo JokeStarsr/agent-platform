@@ -98,6 +98,25 @@ MCP tools/call ─► McpAuthFilter(鉴权) ─► RateLimit ─► 适配器(Ag
 
 **关键点**：MCP 调用没有 appId 概念（外部 Agent 不在 `t_app` 注册），授权判定从"per-app 白名单"切换为"**租户级授权表** `t_tool_grant`"。这是 `AppToolGate` 的补充而非替代——平台内 Agent 仍走 per-app，外部走 per-tenant。
 
+### 3.5 幂等键在 MCP 层的强制
+
+`tools/call` 对写工具（WRITE/PAYMENT）**强制幂等键**，与内部路径共用 `t_tool_invocation`（同一工具两条入口幂等语义一致）：
+
+| 工具权限 | MCP 层要求 | 缺失时 |
+|----------|-----------|--------|
+| READ | 不要求（无副作用） | - |
+| WRITE / PAYMENT | `arguments` 内或 `_meta.idempotencyKey` 必须携带 | 返回 JSON-RPC error（`-32602`，提示携带幂等键），不进入执行 |
+
+幂等键由**调用方（外部 Agent）生成**，格式沿用平台约定 `{tenantId}:{gateway}:{uuid}`（≤128）。网关原样透传给 `ToolEngineService.invoke()`，其 `composeKey` 会再次以租户+appId 包裹防跨租户撞键；重复键 → 返回首次结果（幂等重放，`idempotentReplay=true`），与平台内路径行为一致。
+
+### 3.6 Server 注册中心 / 健康检查 / 上下线事件（排期 W10 第一项 AI 任务）
+
+平台作为 MCP Server，需登记自身能力并对外可探活（**单服务部署**，本设计收敛为进程内轻量实现，不做分布式注册）：
+
+- **`McpServerRegistry`**（L5 `com.agent.tool.mcp`，进程内存 `ConcurrentHashMap`）：登记网关元数据——server 名 `agent-platform`、暴露端点路径、当前工具数、启动时间、最近一次 `tools/call` 心跳时间、健康状态（UP/DEGRADED）。
+- **健康检查端点** `GET /api/mcp/health`：返回 `{ status, toolCount, uptimeMs, lastHeartbeatMs }`，供外部探活与运维看板。`toolCount=0` 时置 `DEGRADED`（工具未装配）。
+- **上下线事件**：应用启动（`@PostConstruct`）与关闭（`@PreDestroy`）时各写一条审计日志（`phase=up / down`，带 server 名与工具数），不广播（单实例）；W11 南向接入外部 Server 时再升级为心跳轮询 + 上下线广播 + 故障剔除。
+
 ---
 
 ## 4. 出站 MCP Client 设计（Outbound，W10 骨架）
@@ -170,6 +189,29 @@ MCP tools/call ─► McpAuthFilter(鉴权) ─► RateLimit ─► 适配器(Ag
 | GET | `/api/mcp/grants?tenantId=` | 某租户工具授权列表（分页） |
 | POST | `/api/mcp/grants` | 授权 / 撤销（写操作 → 幂等键） |
 | GET | `/api/mcp/outbound` | 出站连接器状态（骨架） |
+
+### 7.3 错误码映射（ToolEngine → MCP JSON-RPC error）
+
+`tools/call` 执行失败时，网关把 `ToolEngineService` 的 `BizException` 错误码映射为 MCP JSON-RPC 错误结构 `{ jsonrpc, id, error: { code, message } }`：
+
+| ToolEngine 错误码 | JSON-RPC error code | 说明 |
+|-------------------|---------------------|------|
+| 401 鉴权失败 | `-32001` | 未授权访问（租户凭证无效） |
+| 403 授权拒绝 / PAYMENT | `-32003` | 工具未授权 / 支付级未放开 |
+| 400 参数校验失败 | `-32602` | Invalid params，文案回给调用方可重试 |
+| 404 工具未注册 | `-32602` | 工具不存在 |
+| 409 幂等键冲突 | `-32009` | 同键此前失败，请换键重试 |
+| 504 执行超时 | `-32004` | 工具执行超时 |
+| 429 限流 | `-32029` | Too Many Requests |
+| 500 其他 | `-32603` | 内部错误 |
+
+### 7.4 契约测试（分层）
+
+| 层 | 测试 | 方式 | 默认跑 |
+|----|------|------|--------|
+| 单元 | `McpGatewayTest` | 直接构造 JSON-RPC 请求，mock `ToolEngineService`，断言 tools/list 转换、tools/call 透传、鉴权/授权/限流/幂等键拦截、错误码映射 | ✅ |
+| 契约 | `McpContractTest` | **WireMock 扮演 MCP Client** 向 `/mcp` 发 JSON-RPC 请求，验证协议响应符合 MCP 规范（tools/list 结构、tools/call content[]、错误结构） | ✅ |
+| 端到端 | `McpE2eIT` | `spring-ai-mcp-client` 起真 client 连自家 server，验证 initialize→tools/list→tools/call（含一次写工具幂等重放断言） | `@Tag("integration")` 不默认跑 |
 
 ---
 
