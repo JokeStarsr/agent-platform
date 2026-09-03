@@ -6,4 +6,11 @@
 - 模板：`../../templates/TABLE-DESIGN-TEMPLATE.md`
 - 规则：未获用户检查通过的设计，禁止进入编码实现（见 `../../DESIGN-DOCUMENT-POLICY.md` 第 4 节）
 
-当前尚无设计文档。P1 阶段（排期 W1-W3）预计首先产出：审计日志表、文档血缘表、会话表的设计。
+## 已有设计文档
+
+| 文档 | 状态 |
+|------|------|
+| `20260902-app-table.md` — t_app 应用配置表 | 已批准（W09） |
+| `20260904-t-tool-grant.md` — t_tool_grant 租户级工具授权表 | 待检查（W10） |
+
+> 待检查文档必须经用户检查通过后才可进入建表实现（见 `../../DESIGN-DOCUMENT-POLICY.md` 第 4 节）。
