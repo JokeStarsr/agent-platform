@@ -7,6 +7,13 @@ agent-platform:
       default: ${MCP_DEFAULT_API_KEY:dev-key}
     rate-limit:
       global-qps: 50
+    # 出站 MCP Client（W10 骨架，W11 工具市场完整接入外部 MCP Server）
+    outbound:
+      targets: []
+      # W11 示例：
+      # - name: external-tools
+      #   url: http://external-mcp-server:8080/mcp/sse
+      #   enabled: true
 
 app:
   rag:

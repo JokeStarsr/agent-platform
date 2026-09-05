@@ -115,10 +115,10 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- WireMock：MCP 网关契约测试（模拟 MCP Client） -->
+        <!-- WireMock：MCP 网关契约测试（模拟 MCP Server/Client；standalone 内嵌 Jetty） -->
         <dependency>
             <groupId>org.wiremock</groupId>
-            <artifactId>wiremock</artifactId>
+            <artifactId>wiremock-standalone</artifactId>
             <version>3.9.1</version>
             <scope>test</scope>
         </dependency>

@@ -25,12 +25,14 @@ public class McpAdminController {
     private final ToolRegistry toolRegistry;
     private final ToolGrantRepository grantRepo;
     private final McpServerRegistry registry;
+    private final McpOutboundConnector outbound;
 
     public McpAdminController(ToolRegistry toolRegistry, ToolGrantRepository grantRepo,
-                              McpServerRegistry registry) {
+                              McpServerRegistry registry, McpOutboundConnector outbound) {
         this.toolRegistry = toolRegistry;
         this.grantRepo = grantRepo;
         this.registry = registry;
+        this.outbound = outbound;
     }
 
     /** 入站暴露的工具清单（含权限，供审计核对） */
@@ -56,6 +58,12 @@ public class McpAdminController {
     @GetMapping("/health")
     public Result<Map<String, Object>> health() {
         return Result.ok(registry.health());
+    }
+
+    /** 出站连接器状态（W10 骨架 / W11 完整） */
+    @GetMapping("/outbound")
+    public Result<List<Map<String, Object>>> outbound() {
+        return Result.ok(outbound.status());
     }
 
     public record GrantReq(String tenantId, String toolName, boolean enabled) {

@@ -41,6 +41,9 @@ class McpAdminControllerTest {
     @MockBean
     private McpServerRegistry serverRegistry;
 
+    @MockBean
+    private McpOutboundConnector outbound;
+
     @Test
     void tools_returnsRegisteredTools() throws Exception {
         when(toolRegistry.listTools()).thenReturn(List.of(
@@ -90,5 +93,19 @@ class McpAdminControllerTest {
                 .andExpect(jsonPath("$.code", is(0)))
                 .andExpect(jsonPath("$.data.status", is("UP")))
                 .andExpect(jsonPath("$.data.toolCount", is(8)));
+    }
+
+    @Test
+    void outbound_returnsConnectorStatus() throws Exception {
+        when(outbound.status()).thenReturn(List.of(
+                Map.of("name", "ext-tools", "url", "http://ext:8080/mcp/sse",
+                        "status", "SKELETON", "remoteToolCount", 0, "enabled", true)));
+
+        mockMvc.perform(get("/api/mcp/outbound").header("X-Tenant-Id", "t1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(0)))
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].name", is("ext-tools")))
+                .andExpect(jsonPath("$.data[0].status", is("SKELETON")));
     }
 }

@@ -14,7 +14,7 @@ import org.springframework.core.Ordered;
  * <p>McpProperties（L5 配置）也在本类注册，避免入口类（L1）跨层引用工具层类型（ArchitectureTest 铁律）。</p>
  */
 @Configuration
-@EnableConfigurationProperties(McpProperties.class)
+@EnableConfigurationProperties({McpProperties.class, McpOutboundProperties.class})
 public class McpWebConfig {
 
     @Bean
