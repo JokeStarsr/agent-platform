@@ -2,6 +2,7 @@ package com.agent.tool.toolmarket;
 
 import com.agent.data.toolmarket.ToolCatalogRepository;
 import com.agent.data.toolmarket.ToolCatalogRepository.CatalogRow;
+import com.agent.data.toolmarket.ToolStatsRepository;
 import com.agent.tool.ToolRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ class ToolMarketControllerTest {
 
     @MockBean
     private ToolCatalogRepository repo;
+
+    @MockBean
+    private ToolStatsRepository statsRepo;
 
     @MockBean
     private ToolRegistry toolRegistry;
@@ -113,5 +117,22 @@ class ToolMarketControllerTest {
                 .andExpect(jsonPath("$.code", is(0)));
 
         verify(service).offShelf(1L);
+    }
+
+    @Test
+    void stats_returnsAggregated() throws Exception {
+        when(statsRepo.byTenant("default", 7)).thenReturn(List.of(
+                new ToolStatsRepository.ToolStat("compare_flight", 12, 11, 1, 85.5, 0),
+                new ToolStatsRepository.ToolStat("book_order", 3, 3, 0, 120.0, 1)));
+
+        mockMvc.perform(get("/api/tool-market/stats").header("X-Tenant-Id", "t1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is(0)))
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].toolName", is("compare_flight")))
+                .andExpect(jsonPath("$.data[0].total", is(12)))
+                .andExpect(jsonPath("$.data[1].replayCount", is(1)));
+
+        verify(statsRepo).byTenant("default", 7);
     }
 }

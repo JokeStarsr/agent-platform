@@ -4,6 +4,7 @@ import com.agent.tool.ToolEngineService;
 import com.agent.tool.ToolEngineService.InvokeRequest;
 import com.agent.tool.ToolMeta;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 
@@ -58,6 +59,12 @@ public class AgentToolCallback implements ToolCallback {
             // 让 MCP server 把异常映射为 isError 响应；message 回给调用方
             throw new McpToolExecutionException(meta.name(), e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage(), e);
         }
+    }
+
+    /** Spring AI MCP server 端 trails/call 走带 ToolContext 的重载，委托给 call(String)（修复 "Tool context is not supported!"） */
+    @Override
+    public String call(String toolInput, ToolContext context) {
+        return call(toolInput);
     }
 
     /** 解析参数；idempotencyKey / _meta 属于网关控制字段，不透传给工具本体 */

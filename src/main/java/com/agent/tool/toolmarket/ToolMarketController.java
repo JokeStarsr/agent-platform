@@ -4,6 +4,7 @@ import com.agent.common.PageResult;
 import com.agent.common.Result;
 import com.agent.data.toolmarket.ToolCatalogRepository;
 import com.agent.data.toolmarket.ToolCatalogRepository.CatalogRow;
+import com.agent.data.toolmarket.ToolStatsRepository;
 import com.agent.tool.ToolRegistry;
 import com.agent.tool.ToolMeta;
 import org.springframework.web.bind.annotation.*;
@@ -21,11 +22,14 @@ public class ToolMarketController {
 
     private final ToolMarketService service;
     private final ToolCatalogRepository repo;
+    private final ToolStatsRepository statsRepo;
     private final ToolRegistry toolRegistry;
 
-    public ToolMarketController(ToolMarketService service, ToolCatalogRepository repo, ToolRegistry toolRegistry) {
+    public ToolMarketController(ToolMarketService service, ToolCatalogRepository repo,
+                                ToolStatsRepository statsRepo, ToolRegistry toolRegistry) {
         this.service = service;
         this.repo = repo;
+        this.statsRepo = statsRepo;
         this.toolRegistry = toolRegistry;
     }
 
@@ -90,5 +94,13 @@ public class ToolMarketController {
     @GetMapping("/runtime")
     public Result<List<ToolMeta>> runtime() {
         return Result.ok(toolRegistry.listTools());
+    }
+
+    /** 调用统计（窗口内每工具的调用量/成功/失败/时延，docs 20260905-tool-marketplace.md §6.2） */
+    @GetMapping("/stats")
+    public Result<List<ToolStatsRepository.ToolStat>> stats(
+            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(defaultValue = "default") String tenantId) {
+        return Result.ok(statsRepo.byTenant(tenantId, Math.min(90, Math.max(1, days))));
     }
 }

@@ -108,7 +108,7 @@ public class ToolCatalogRepository {
                   (tool_name, version, display_name, description, category, parameters,
                    permission, source, external_url, external_tool_name, status, enabled,
                    owner_id, testcase_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 """;
         jdbc.update(sql, r.toolName(), newVersion, r.displayName(), r.description(), r.category(),
                 r.parameters(), r.permission(), r.source(), r.externalUrl(), r.externalToolName(),
@@ -128,7 +128,7 @@ public class ToolCatalogRepository {
 
     /** 修改测试用例与描述（发布前可改） */
     public void updateContent(long id, String description, String testcaseJson) {
-        jdbc.update("UPDATE t_tool_catalog SET description = ?, testcase_json = ?, updated_at = now() WHERE id = ?",
+        jdbc.update("UPDATE t_tool_catalog SET description = ?, testcase_json = ?::jsonb, updated_at = now() WHERE id = ?",
                 description, testcaseJson, id);
     }
 
