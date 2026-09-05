@@ -13,5 +13,6 @@
 | `20260902-app-table.md` — t_app 应用配置表 | 已批准（W09） |
 | `20260904-t-tool-grant.md` — t_tool_grant 租户级工具授权表 | 待检查（W10） |
 | `20260905-t-tool-catalog.md` — t_tool_catalog 工具目录表 | 待检查（W11） |
+| `20260905-t-multi-agent.md` — t_multi_agent_run 多智能体运行表 | 待检查（W13） |
 
 > 待检查文档必须经用户检查通过后才可进入建表实现（见 `../../DESIGN-DOCUMENT-POLICY.md` 第 4 节）。
