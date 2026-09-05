@@ -16,11 +16,28 @@
         </rollingPolicy>
     </appender>
 
+    <!-- L6 Token 计量日志独立落盘（P2）：logger METERING → logs/metering.log，按天滚动保留 30 天 -->
+    <appender name="METERING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/metering.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{trace_id:-}] %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/metering.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
     </root>
 
     <logger name="AUDIT" level="INFO" additivity="false">
         <appender-ref ref="AUDIT_FILE"/>
+    </logger>
+
+    <logger name="METERING" level="INFO" additivity="false">
+        <appender-ref ref="METERING_FILE"/>
     </logger>
 </configuration>
