@@ -1,3 +1,13 @@
+# L5 MCP 网关（W10，docs/design/architecture/20260904-mcp-gateway.md）
+# api-keys：租户 → API Key 映射（MCP 入站鉴权）；key 由环境变量注入，dev-key 仅本地兜底
+# rate-limit.global-qps：租户级全局限流
+agent-platform:
+  mcp:
+    api-keys:
+      default: ${MCP_DEFAULT_API_KEY:dev-key}
+    rate-limit:
+      global-qps: 50
+
 app:
   rag:
     enabled: true        # ZHIPUAI_API_KEY 已配置，启用 RAG 服务
@@ -37,6 +47,16 @@ spring:
           temperature: 0.7
           stream-usage: true
 
+    # L5 MCP Server 自动配置（W10，docs/design/architecture/20260904-mcp-gateway.md §3.1）
+    # SSE 端点必须在 /mcp 前缀下（McpAuthFilter 拦截 /mcp/*）；message 端点默认 /mcp/message 已覆盖
+    mcp:
+      server:
+        name: agent-platform
+        version: 1.0.0
+        sse-endpoint: /mcp/sse
+        sse-message-endpoint: /mcp/message
+        request-timeout: 30s
+
     # 智谱 Embedding（RAG 向量化用）
     zhipuai:
       api-key: ${ZHIPUAI_API_KEY}
@@ -64,6 +84,7 @@ spring:
         - classpath:schema-memory.sql
         - classpath:schema-policy.sql
         - classpath:schema-app.sql
+        - classpath:schema-mcp.sql
 
   # W7 记忆/上下文配置（docs/design/architecture/20260901-memory-context.md §2.3）
   memory:

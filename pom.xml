@@ -98,10 +98,28 @@
             <artifactId>spring-ai-tika-document-reader</artifactId>
         </dependency>
 
+        <!-- ========== L5 MCP 网关（W10，docs/design/architecture/20260904-mcp-gateway.md） ========== -->
+        <!-- 入站：平台作 MCP Server（servlet 版，规避 webflux 与现有 servlet 栈冲突）；出站：MCP Client 骨架 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client</artifactId>
+        </dependency>
+
         <!-- ========== 测试 ========== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- WireMock：MCP 网关契约测试（模拟 MCP Client） -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock</artifactId>
+            <version>3.9.1</version>
             <scope>test</scope>
         </dependency>
         <!-- Spring AI 测试工具（MockChatModel/MockEmbeddingModel 等，纯单测不调真实 API） -->

@@ -1,5 +1,6 @@
 # Java / Maven
 target/
+META-INF/
 *.class
 *.jar
 !.mvn/wrapper/maven-wrapper.jar

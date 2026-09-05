@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP 网关 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L5 工具协议层 · W10</span>
+      <h1>MCP 工具网关</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 双向 MCP 网关（入站暴露本地工具 + 出站接外部工具）/ 鉴权 / 审计 / 限流 / 租户授权</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>🏥 网关健康</h3>
+      <div id="health" class="sub">加载中...</div>
+    </div>
+
+    <div class="card">
+      <h3>🔧 已注册工具</h3>
+      <table>
+        <thead>
+          <tr><th>工具名</th><th>说明</th><th>权限</th><th>超时</th></tr>
+        </thead>
+        <tbody id="toolTb"></tbody>
+      </table>
+      <div id="toolEmpty" class="empty" hidden>暂无注册工具</div>
+    </div>
+
+    <div class="card">
+      <h3>🔑 租户工具授权</h3>
+      <div class="row">
+        <input type="text" id="grantTenant" placeholder="tenantId" value="default">
+        <button type="button" id="loadGrants">查询授权</button>
+      </div>
+      <table style="margin-top:10px">
+        <thead>
+          <tr><th>工具名</th><th>权限</th><th>状态</th><th>操作</th></tr>
+        </thead>
+        <tbody id="grantTb"></tbody>
+      </table>
+      <div id="grantEmpty" class="empty" hidden>该租户暂无授权记录</div>
+    </div>
+
+    <div class="card">
+      <h3>➕ 授权 / 撤销工具</h3>
+      <form class="row" id="grantForm">
+        <input type="text" id="gTenant" placeholder="tenantId" value="default" required>
+        <input type="text" id="gTool" placeholder="tool_name" required>
+        <select id="gEnabled">
+          <option value="true">授权</option>
+          <option value="false">撤销</option>
+        </select>
+        <button type="submit">提交</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>📡 MCP 端点信息</h3>
+      <div class="sub">
+        <p>SSE 端点：<code>/mcp/sse</code>（MCP Client 连接入口）</p>
+        <p>消息端点：<code>/mcp/message</code>（JSON-RPC 请求）</p>
+        <p>鉴权头：<code>X-Tenant-Id</code> + <code>X-Api-Key</code>（或 Authorization: Bearer）</p>
+        <p>协议：<a href="https://modelcontextprotocol.io" target="_blank">MCP (Model Context Protocol)</a></p>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

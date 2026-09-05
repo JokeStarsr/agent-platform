@@ -1,6 +1,6 @@
 # MCP 网关核心设计（L5 工具协议层 · 双向网关 + 鉴权/审计/限流）
 
-> 版本：v1.0 ｜ 状态：**待检查**（2026-09-04 提交用户审批，获批前禁止实现） ｜ 依据：《开发排期》W10（MCP 网关核心）、CLAUDE.md 七层铁律、`docs/design/architecture/20260901-tool-engine.md`（W5 已批准）、`20260901-w8-trip-scenario.md`（W8 已批准）、`docs/design/table/20260902-app-table.md`（W9 已批准）
+> 版本：v1.1 ｜ 状态：**已实现**（2026-09-05 夜间自主推进，132 测试全绿） ｜ 依据：《开发排期》W10（MCP 网关核心）、CLAUDE.md 七层铁律、`docs/design/architecture/20260901-tool-engine.md`（W5 已批准）、`20260901-w8-trip-scenario.md`（W8 已批准）、`docs/design/table/20260902-app-table.md`（W9 已批准）
 
 ---
 
@@ -60,7 +60,7 @@
 | 暴露路径 | `/{base-path}/mcp`（建议 `spring.ai.mcp.server.servlet.context-path` 前缀 `/mcp`） | 可配置，前缀避免与业务 REST 冲突 |
 | Server 名 | `agent-platform` | `spring.ai.mcp.server.name` |
 
-> ⚠️ 该 starter 依赖 WebFlux 传输，与项目当前 servlet 栈（`spring-boot-starter-web`）混用需确认是否引入冲突；**实现阶段先用一个独立 `@Configuration` 隔离，若 servlet+webflux 并存有问题则改用 servlet 版 starter**（见 9.1 备选）。此项为实现时首个验证点。
+> ⚠️ **实现决策（2026-09-05）**：实测确认 `spring-ai-starter-mcp-server:1.0.0` 的 `McpWebMvcServerAutoConfiguration`（`@ConditionalOnClass(WebMvcSseServerTransportProvider)`）自动激活 servlet/SSE 传输，WebFlux 版因 classpath 无 `WebFluxSseServerTransportProvider` 而跳过。**servlet/webflux 共存问题不存在**。MCP Server 端点配置：`spring.ai.mcp.server.sse-endpoint=/mcp/sse`、`sse-message-endpoint=/mcp/message`（均在 `/mcp` 前缀下，McpAuthFilter 拦截 `/mcp/*` 全覆盖）。
 
 ### 3.2 暴露哪些工具（租户级白名单）
 
@@ -234,7 +234,7 @@ MCP tools/call ─► McpAuthFilter(鉴权) ─► RateLimit ─► 适配器(Ag
 
 | 方案 | 结论 | 理由 |
 |------|------|------|
-| 9.1 仅用 servlet 版 MCP starter（不用 webflux） | ⚠️ 实现时先验证 | 项目当前是 servlet 栈，servlet 版 starter 可能更顺；但 WebFlux 版是 Spring AI 1.0 MCP 的默认/主推形态，两者实现时二选一，以"能干净叠加 Filter 鉴权 + 不与现有 servlet 冲突"为准，此条在实现阶段定夺并回写本文档 |
+| 9.1 仅用 servlet 版 MCP starter（不用 webflux） | ✅ **已验证** | 实测 `McpWebMvcServerAutoConfiguration` 在 servlet 栈项目自动激活，WebFlux 版因缺 class 跳过，**共存无冲突**。使用 `spring-ai-starter-mcp-server`（不带 webflux 后缀），servlet/SSE 传输开箱即用 |
 | 9.2 只做入站，不做出站骨架 | ❌ | W11 工具市场要消费外部工具，届时重开架构成本高 |
 | 9.3 工具迁移=用 @Tool 重写每个工具 | ❌ | 双份实现（原 AgentTool + @Tool），幂等/校验逻辑重复，违反"不重写已验证逻辑"；适配器桥接更稳 |
 | 9.4 MCP 入站用 `tools/list` 全集 + 调用时授权（本文 3.2） | ✅ | 满足"未授权调用被拒+审计"检查点，实现成本最低；清单过滤列演进 |
@@ -276,5 +276,6 @@ MCP tools/call ─► McpAuthFilter(鉴权) ─► RateLimit ─► 适配器(Ag
 | 日期 | 检查项 | 结果 |
 |------|--------|------|
 | 2026-09-04 | 用户计划审批（架构决策 / 表结构 / 接口契约 / 迁移策略） | 待检查 |
+| 2026-09-05 | 用户授权自主推进，实现全部代码 | **已实现**，132 测试全绿 |
 
-> 获批前，本设计所涉代码（依赖 / 适配器 / Filter / 授权表 / Controller）一律不实现。
+> v1.1 实现回写（2026-09-05）：§3.1 servlet/webflux 共存验证结论、§9.1 备选方案定论、§12 检查记录更新。

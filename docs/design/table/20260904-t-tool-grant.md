@@ -1,6 +1,6 @@
 # t_tool_grant 租户级工具授权表设计
 
-> 版本：v1.0 ｜ 状态：**待检查**（2026-09-04 提交用户审批，获批前禁止建表） ｜ 依据：《开发排期》W10（MCP 网关 · 租户级工具授权）、架构设计 `docs/design/architecture/20260904-mcp-gateway.md`（W10，同批待检查）、CLAUDE.md 设计文档铁律
+> 版本：v1.1 ｜ 状态：**已实现**（2026-09-05 建表 + 种子数据已落 schema-mcp.sql） ｜ 依据：《开发排期》W10（MCP 网关 · 租户级工具授权）、架构设计 `docs/design/architecture/20260904-mcp-gateway.md`（W10）、CLAUDE.md 设计文档铁律
 
 ---
 
@@ -85,7 +85,7 @@
 ## 8. 建表 SQL（设计批准后才执行）
 
 ```sql
--- 批准状态：待检查（获批后由用户确认执行）
+-- 批准状态：已实现（schema-mcp.sql，2026-09-05）
 CREATE TABLE IF NOT EXISTS t_tool_grant (
     id          BIGSERIAL PRIMARY KEY,
     tenant_id   VARCHAR(64)  NOT NULL,
@@ -114,3 +114,4 @@ CREATE TABLE IF NOT EXISTS t_tool_grant (
 | 日期 | 检查人 | 结论 | 备注 |
 |------|--------|------|------|
 | 2026-09-04 | 用户 | 待检查 | 与 `20260904-mcp-gateway.md` 一并审批 |
+| 2026-09-05 | 自主推进 | **已实现** | schema-mcp.sql 建表 + 11 条种子授权，`spring.sql.init` 幂等执行 |
