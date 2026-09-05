@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工具市场 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L5 工具协议层 · W11</span>
+      <h1>工具市场</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 工具目录（分类/版本/上下架）+ 自助注册（注册→发布→可调用 ≤ 30 分钟）</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>🆕 自助注册工具</h3>
+      <form id="regForm">
+        <div class="row">
+          <input type="text" id="toolName" placeholder="tool_name (小写下划线)" required>
+          <input type="text" id="displayName" placeholder="展示名" required>
+          <select id="category">
+            <option value="business">business</option>
+            <option value="communication">communication</option>
+            <option value="data">data</option>
+            <option value="schedule">schedule</option>
+            <option value="utility">utility</option>
+          </select>
+          <select id="permission">
+            <option value="READ">READ</option>
+            <option value="WRITE">WRITE</option>
+          </select>
+          <select id="behavior">
+            <option value="MOCK">MOCK</option>
+            <option value="ARGS_ECHO">ARGS_ECHO</option>
+          </select>
+        </div>
+        <textarea id="description" rows="2" placeholder="描述（≥20 字符，模型靠它选工具）" required style="margin-top:8px"></textarea>
+        <textarea id="parameters" rows="4" placeholder="{&quot;type&quot;:&quot;object&quot;,&quot;properties&quot;:{...}}" required style="margin-top:8px"></textarea>
+        <textarea id="testcases" rows="4" placeholder='[{&quot;name&quot;:&quot;正常&quot;,&quot;arguments&quot;:{},&quot;expectCode&quot;:0}]' style="margin-top:8px"></textarea>
+        <button type="submit" class="primary" style="margin-top:10px">注册（DRAFT）</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>📦 工具目录</h3>
+      <div class="row">
+        <select id="filterStatus">
+          <option value="">全部状态</option>
+          <option value="PUBLISHED">已发布</option>
+          <option value="DRAFT">草稿</option>
+          <option value="OFF_SHELF">已下架</option>
+        </select>
+        <input type="text" id="filterKeyword" placeholder="搜索工具名/描述">
+        <button id="filterBtn">筛选</button>
+      </div>
+      <table style="margin-top:10px">
+        <thead>
+          <tr><th>工具名</th><th>展示名</th><th>分类</th><th>版本</th><th>权限</th><th>来源</th><th>状态</th><th>操作</th></tr>
+        </thead>
+        <tbody id="tb"></tbody>
+      </table>
+      <div id="empty" class="empty" hidden>暂无工具</div>
+      <div class="pager" id="pager" hidden>
+        <button id="prevBtn">‹ 上一页</button>
+        <span id="pageInfo"></span>
+        <button id="nextBtn">下一页 ›</button>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # t_tool_catalog 工具目录表设计
 
-> 版本：v1.0 ｜ 状态：**待检查**（2026-09-05 提交用户审批，获批前禁止建表） ｜ 依据：《开发排期》W11（工具市场与自助上架）、架构设计 `docs/design/architecture/20260905-tool-marketplace.md`（W11，待检查）、CLAUDE.md 设计文档铁律
+> 版本：v1.0 ｜ 状态：**已批准**（2026-09-05 用户审批通过） ｜ 依据：《开发排期》W11（工具市场与自助上架）、架构设计 `docs/design/architecture/20260905-tool-marketplace.md`（W11，已批准）、CLAUDE.md 设计文档铁律
 
 ---
 

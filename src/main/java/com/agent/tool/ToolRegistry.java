@@ -8,9 +8,10 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * L5 工具协议层：工具注册中心 v1（docs/design/architecture/20260901-tool-engine.md §2.1）
- * Spring 组件扫描收集全部 AgentTool bean → 内存注册表。
- * 启动 fail-fast：工具名冲突 / 非法命名（非小写下划线）→ 抛异常阻止启动。
+ * L5 工具协议层：工具注册中心（docs/design/architecture/20260901-tool-engine.md §2.1）
+ * <p>构造时收集全部 {@code AgentTool} beans → 内存注册表（fail-fast 校验）；
+ * W11 起支持动态注册/注销（工具市场自助注册发布 → register，下架 → unregister），
+ * 与 ToolCatalogRepository 协作（目录是管理面，本机构造执行面掩码）。</p>
  */
 @Component
 public class ToolRegistry {
@@ -20,16 +21,29 @@ public class ToolRegistry {
 
     public ToolRegistry(List<AgentTool> tools) {
         for (AgentTool t : tools) {
-            String name = t.name();
-            if (name == null || !name.matches("[a-z_][a-z0-9_]*")) {
-                throw new IllegalStateException("工具名非法（须小写下划线）: " + name);
-            }
-            if (instances.containsKey(name)) {
-                throw new IllegalStateException("工具名冲突，注册失败: " + name + "（" + instances.get(name).getClass().getName() + " vs " + t.getClass().getName() + "）");
-            }
-            instances.put(name, t);
-            metas.put(name, new ToolMeta(name, t.description(), t.parameters(), t.permission(), t.timeoutMs()));
+            register(t);
         }
+    }
+
+    /** 动态注册（工具市场发布时调用）；重名覆盖并告警（registry 以最新注册为准） */
+    public synchronized void register(AgentTool tool) {
+        String name = tool.name();
+        if (name == null || !name.matches("[a-z_][a-z0-9_]*")) {
+            throw new IllegalArgumentException("工具名非法（须小写下划线）: " + name);
+        }
+        if (instances.containsKey(name)) {
+            org.slf4j.LoggerFactory.getLogger(ToolRegistry.class)
+                    .warn("工具名重复注册，覆盖旧实现: {}", name);
+        }
+        instances.put(name, tool);
+        metas.put(name, new ToolMeta(name, tool.description(), tool.parameters(), tool.permission(), tool.timeoutMs()));
+    }
+
+    /** 动态注销（工具市场下架时调用）；返回是否真的移除了一个注册 */
+    public synchronized boolean unregister(String name) {
+        boolean removed = instances.remove(name) != null;
+        metas.remove(name);
+        return removed;
     }
 
     public Optional<AgentTool> resolve(String name) {
