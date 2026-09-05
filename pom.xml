@@ -144,6 +144,25 @@
         </dependency>
         <!-- 工具参数校验：平台自研 ParamSchemaValidator（仅 type/properties/required/minimum/maximum，
         见 docs/design/architecture/20260901-tool-engine.md §2.3；everit 1.5.1 与 org.json 运行时不兼容已弃） -->
+
+        <!-- ========== W12 执行沙箱（docs/design/security/20260905-sandbox.md） ========== -->
+        <!-- Docker 容器隔离（代码沙箱：network none / read-only / 限额 / 超时强杀） -->
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-core</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-httpclient5</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+        <!-- SQL AST 解析白名单（SQL 沙箱：仅 SELECT/WITH，拒绝写/DDL/多语句） -->
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.7</version>
+        </dependency>
     </dependencies>
 
     <build>

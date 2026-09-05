@@ -1,0 +1,11 @@
+# W12 代码沙箱 Python 镜像（docs/design/security/20260905-sandbox.md §3.1）
+# 安全约束在运行时 docker create 强制：network none / read-only / 限额 / cap-drop ALL / 非 root
+# 基础镜像走 daocloud 国内源（Docker Hub 直连超时；构建时 docker build 网络可用）
+FROM docker.m.daocloud.io/library/alpine:3.20
+RUN sed -i 's#dl-cdn.alpinelinux.org#mirrors.tuna.tsinghua.edu.cn#g' /etc/apk/repositories \
+ && apk add --no-cache python3 py3-pip bash coreutils gcc musl-dev \
+ && adduser -D -u 10001 -H runner \
+ && rm -rf /var/cache/apk/*
+USER runner
+WORKDIR /home/runner
+CMD ["sh", "-c", "trap 'exit 0' TERM; sleep 3600"]

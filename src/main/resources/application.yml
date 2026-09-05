@@ -14,6 +14,21 @@ agent-platform:
       # - name: external-tools
       #   url: http://external-mcp-server:8080/mcp/sse
       #   enabled: true
+    # L5 执行沙箱（W12，docs/design/security/20260905-sandbox.md）
+    # dockerHost 留空 = 平台自动检测（Windows npipe / Linux unix socket）
+    # 生产必须配 SQL 只读账号（sandbox_ro），事务只读是写保护硬边界
+    sandbox:
+      docker-host: ""
+      dockerfile-path: docker/sandbox/Dockerfile.python
+      image: sboxes/python-311
+      pool-size: 2
+      memory-mb: 256
+      cpus: 1.0
+      pids-limit: 64
+      exec-timeout-sec: 8
+      output-limit: 16384
+      sql-max-rows: 100
+      sql-timeout-sec: 10
 
 app:
   rag:
