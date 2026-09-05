@@ -108,6 +108,7 @@ spring:
         - classpath:schema-app.sql
         - classpath:schema-mcp.sql
         - classpath:schema-tool-catalog.sql
+        - classpath:schema-multi-agent.sql
 
   # W7 记忆/上下文配置（docs/design/architecture/20260901-memory-context.md §2.3）
   memory:

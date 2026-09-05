@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多智能体 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L3 编排层 · W13</span>
+      <h1>多智能体协作</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ Supervisor（分解→专家→汇总）/ Pipeline（串行/并行）· 共享黑板 · 预算护栏</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>🚀 提交多智能体任务</h3>
+      <form id="submitForm">
+        <div class="row">
+          <select id="topology">
+            <option value="supervisor">Supervisor（分解→专家→汇总）</option>
+            <option value="pipeline">Pipeline（阶段流水线）</option>
+          </select>
+          <input type="text" id="task" placeholder="任务描述，如：规划一次北京出差" style="flex:2" required>
+          <button type="submit" class="primary">提交</button>
+        </div>
+        <textarea id="stages" rows="3" placeholder="pipeline 用：JSON stages，如 [{&quot;agent&quot;:&quot;sv_summarize&quot;,&quot;prompt&quot;:&quot;请总结：{prev}&quot;},{&quot;agent&quot;:&quot;sv_translate&quot;,&quot;prompt&quot;:&quot;翻译：{prev}&quot;}]" style="margin-top:8px"></textarea>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>📋 运行列表</h3>
+      <div class="row">
+        <select id="filterStatus">
+          <option value="">全部</option>
+          <option value="COMPLETED">完成</option>
+          <option value="RUNNING">运行中</option>
+          <option value="FAILED">失败</option>
+        </select>
+        <button id="filterBtn">刷新</button>
+      </div>
+      <table style="margin-top:10px">
+        <thead><tr><th>ID</th><th>拓扑</th><th>任务</th><th>状态</th><th>Token</th><th>操作</th></tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+      <div id="empty" class="empty" hidden>暂无多智能体运行</div>
+    </div>
+
+    <div class="card" id="detailCard" hidden>
+      <h3>🔍 运行详情</h3>
+      <pre class="json" id="detailBody"></pre>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

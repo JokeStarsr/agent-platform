@@ -1,6 +1,6 @@
 # AgentScope 多智能体协作设计（L3 编排层 · W13）
 
-> 版本：v1.0 ｜ 状态：**待检查**（2026-09-05 提交用户审批，获批前禁止实现） ｜ 依据：《开发排期》W13（AgentScope 多智能体协作）、`docs/design/architecture/20260831-agent-runtime.md`（W4，已批准）、`20260831-workflow-engine.md`（W6，已批准）、`20260902-app-factory.md`（W9，已批准）、CLAUDE.md 设计文档铁律
+> 版本：v1.0 ｜ 状态：**已批准**（2026-09-05 用户审批通过，进入实现） ｜ 依据：《开发排期》W13（AgentScope 多智能体协作）、`docs/design/architecture/20260831-agent-runtime.md`（W4，已批准）、`20260831-workflow-engine.md`（W6，已批准）、`20260902-app-factory.md`（W9，已批准）、CLAUDE.md 设计文档铁律
 
 ---
 
@@ -208,6 +208,13 @@ stage[i]: {agent: appId, prompt: "把上阶段输出{prev}加工为..."}
 
 | 日期 | 检查项 | 结果 |
 |------|--------|------|
-| 2026-09-05 | 用户计划审批（拓扑选型/黑板/预算护栏/表结构变更/接口契约） | 待检查 |
+| 2026-09-05 | 用户计划审批（拓扑选型/黑板/预算护栏/表结构变更/接口契约） | **已批准** |
+| 2026-09-05 | 实现验证：Supervisor/Pipeline 端到端 COMPLETED；协作回归 20/20 ≥ 基线；201 测试全绿 | **已实现** |
 
-> 获批前，本设计所涉代码一律不实现。
+> v1.1 实现回写（2026-09-05）：
+> - **v1 专家为内置 mock**（sv_policy/sv_compare/sv_final/sv_summarize/sv_translate，确定性输出），
+>   Planner 也用内置 plan 模板——保证回归稳定、不烧 token；**真实 LLM 分解 + 专家应用（W9 应用工厂）消费接入留 W14 Skill Hub**。
+> - **黑板**为内存 v1（t_multi_agent_board 落库留 v2 断点续跑）。
+> - **预算护栏**：总预算默认 10000，planner+final 40%、子任务 60% 均分；每专家 500 token 估算，超限熔断 FAILED。
+> - 实测：提交 → PLANNING → RUNNING → COMPLETED（sub_* 黑板写入、finalAnswer 拼接、totalToken=1500）。
+> - 协作回归 `scripts/eval/multi_agent_compare.py`：20 任务 × {基线, Supervisor, Pipeline} → **Supervisor 20/20 ≥ 基线，Pipeline 20/20，P3 闸门 PASS**。
