@@ -7,14 +7,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 /**
- * LLM 网关 v1（L6 模型服务层）
- * <p>
- * 当前：直接代理 Spring AI ChatModel（OpenAI 兼容协议 → DeepSeek）。
- * 后续演进（P1 后期）：模型路由、超时重试、Token 用量计量拦截器、降级链。
- * </p>
- * <p>
- * 架构铁律：应用层禁止直连模型，统一经由此网关（或编排层调用）。
- * </p>
+ * LLM 网关（L6 模型服务层）
+ * <p>统一经本网关访问模型（架构铁律：应用层禁止直连模型）。
+ * system 为空时跳过 .system()（Spring AI 1.0 的 Assert.hasText 拒绝空 system 字符串）。
+ * ChatClient builder 不可变，链式调用每个方法都返回新 spec。</p>
  */
 @Service
 public class LlmGateway {
@@ -27,48 +23,36 @@ public class LlmGateway {
 
     /** 单轮生成 */
     public String generate(String system, String user) {
-        ChatClient client = ChatClient.builder(chatModel).build();
-        return client.prompt()
-                .system(system)
-                .user(user)
-                .call()
-                .content();
+        ChatClient.ChatClientRequestSpec spec = applySystem(spec().user(user), system);
+        return spec.call().content();
     }
 
     /** 单轮生成（指定模型名覆盖默认配置，用于 LLM-as-judge 双模型互判等场景） */
     public String generateWithModel(String system, String user, String model) {
-        if (model == null || model.isBlank()) {
-            return generate(system, user);
+        ChatClient.ChatClientRequestSpec spec = applySystem(spec().user(user), system);
+        if (model != null && !model.isBlank()) {
+            spec = spec.options(OpenAiChatOptions.builder().model(model).build());
         }
-        ChatClient client = ChatClient.builder(chatModel).build();
-        return client.prompt()
-                .system(system)
-                .user(user)
-                .options(OpenAiChatOptions.builder().model(model).build())
-                .call()
-                .content();
+        return spec.call().content();
     }
 
     /** 流式生成 */
     public Flux<String> stream(String system, String user) {
-        ChatClient client = ChatClient.builder(chatModel).build();
-        return client.prompt()
-                .system(system)
-                .user(user)
-                .stream()
-                .content();
+        ChatClient.ChatClientRequestSpec spec = applySystem(spec().user(user), system);
+        return spec.stream().content();
     }
 
-    /** 结构化输出（JSON 模式强约束）：LLM 返回指定类型，用于 Agent 决策等需机器可读的场景
-     *  <p>v1 不接 Spring AI 原生 tool_calls（内部自动执行循环与编排层手动执行冲突），
-     *  工具描述走 system prompt，返回 JSON 由编排层手动解析执行；W5 工具注册中心落地后再评估切换。</p>
-     */
+    /** 结构化输出（JSON 模式强约束）：LLM 返回指定类型，用于 Agent 决策等需机器可读的场景 */
     public <T> T generateStructured(String system, String user, Class<T> outputType) {
-        ChatClient client = ChatClient.builder(chatModel).build();
-        return client.prompt()
-                .system(system)
-                .user(user)
-                .call()
-                .entity(outputType);
+        ChatClient.ChatClientRequestSpec spec = applySystem(spec().user(user), system);
+        return spec.call().entity(outputType);
+    }
+
+    private ChatClient.ChatClientRequestSpec spec() {
+        return ChatClient.builder(chatModel).build().prompt();
+    }
+
+    private ChatClient.ChatClientRequestSpec applySystem(ChatClient.ChatClientRequestSpec spec, String system) {
+        return (system != null && !system.isBlank()) ? spec.system(system) : spec;
     }
 }

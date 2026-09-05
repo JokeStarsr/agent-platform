@@ -1,0 +1,7 @@
+[
+  {"task": "从北京出差住宿标准是什么？", "expectedTool": "policy_query"},
+  {"task": "北京到上海本周五有哪些航班可选？", "expectedTool": "compare_flight"},
+  {"task": "帮我预订北京到上海CA101这个航班", "expectedTool": "book_order"},
+  {"task": "查看我最近的下单记录", "expectedTool": "query_recent_orders"},
+  {"task": "给这位客户发一张5元补偿券", "expectedTool": "send_coupon"}
+]
