@@ -22,9 +22,12 @@ public class ChatController {
         this.llmGateway = llmGateway;
     }
 
-    /** 单轮问答（非流式） */
+    /** 单轮问答（非流式）；model 字段可选，覆盖默认模型（用于双模型互判等场景） */
     @PostMapping("/ask")
     public Result<String> ask(@RequestBody AskRequest req) {
+        if (req.model() != null && !req.model().isBlank()) {
+            return Result.ok(llmGateway.generateWithModel("", req.message(), req.model()));
+        }
         return Result.ok(llmGateway.generate("", req.message()));
     }
 
@@ -34,6 +37,6 @@ public class ChatController {
         return llmGateway.stream("", req.message());
     }
 
-    public record AskRequest(@NotBlank(message = "message 不能为空") String message) {
+    public record AskRequest(@NotBlank(message = "message 不能为空") String message, String model) {
     }
 }

@@ -30,6 +30,11 @@ from pathlib import Path
 BASE_URL = os.getenv("GOLDEN_SET_BASE_URL", "http://localhost:8082")
 API_PREFIX = "/api/rag"        # RAG 在线检索接口前缀
 
+# ===== 双模型互判配置（P2 遗留项：消除单模型抖动） =====
+# 用两个模型各判一次，取最小值作为保守分。任一失败时用另一侧分数；两侧均失败兜底 0.0。
+# 空列表 = 同模型双调用（最稳健但无模型多样性）；填入具体模型名则走不同上游。
+JUDGE_MODELS: List[str] = os.getenv("GOLDEN_SET_JUDGE_MODELS", "").split(",") if os.getenv("GOLDEN_SET_JUDGE_MODELS") else []
+
 # ===== 评价指标阈值 (对应 ADS P1 闸门) =====
 THRESHOLDS = {
     "faithfulness": 0.90,      # 忠实度下限 (LLM-as-judge)
@@ -84,15 +89,14 @@ def _recall_at_5(expected_sources: List[str], citations: List[str]) -> float:
     return 1.0 if expected_docs & cited_docs else 0.0
 
 
-def _judge_faithfulness(answer: str, source_chunks: List[str], question: str) -> float:
+def _single_judge_call(prompt: str, model: str = None) -> float:
     """
-    Faithfulness LLM-as-judge（替换 bigram 近似，符合设计文档 §6.3）：
-    调用应用 /api/chat/ask 判定答案是否被来源切片支持。
-    判分模型在并发/限流下偶发失败，失败时重试至多 2 次；仍失败兜底 0.0。
+    单次判分调用：返回 0.0-1.0 分数，失败返回 None（非 0.0，区分"失败"与"低分"）。
     """
-    chunks = "\n".join(source_chunks) if source_chunks else "(empty)"
-    prompt = JUDGE_PROMPT.format(chunks=chunks, answer=answer, question=question)
-    payload = json.dumps({"message": prompt}).encode("utf-8")
+    body = {"message": prompt}
+    if model:
+        body["model"] = model
+    payload = json.dumps(body).encode("utf-8")
     for attempt in range(3):
         req = urllib.request.Request(
             f"{BASE_URL}/api/chat/ask",
@@ -107,18 +111,44 @@ def _judge_faithfulness(answer: str, source_chunks: List[str], question: str) ->
                 if m:
                     return float(m.group())
                 if attempt < 2:
-                    print(f"  !! judge 返回非数字({txt[:50]!r})，重试 {attempt + 1}")
+                    print(f"  !! judge({model or 'default'}) 返回非数字({txt[:50]!r})，重试 {attempt + 1}")
+                    import time
+                    time.sleep(1.5 * (attempt + 1))
                     continue
-                return 0.0
+                return None
         except Exception as e:
             if attempt < 2:
-                print(f"  !! judge error: {e}，重试 {attempt + 1}")
+                print(f"  !! judge({model or 'default'}) error: {e}，重试 {attempt + 1}")
                 import time
                 time.sleep(1.5 * (attempt + 1))
                 continue
-            print(f"  !! judge error: {e}")
-            return 0.0
-    return 0.0
+            print(f"  !! judge({model or 'default'}) error: {e}")
+            return None
+    return None
+
+
+def _judge_faithfulness(answer: str, source_chunks: List[str], question: str) -> float:
+    """
+    Faithfulness LLM-as-judge（P2 双模型互判版本）：
+    用两个模型（或两次调用）各判一次，取最小值作为保守分，消除单模型抖动。
+    任一调用失败时用另一侧分数；两侧均失败兜底 0.0。
+    """
+    chunks = "\n".join(source_chunks) if source_chunks else "(empty)"
+    prompt = JUDGE_PROMPT.format(chunks=chunks, answer=answer, question=question)
+
+    # 双模型：默认模型 + 显式指定模型（通过 sub2api 路由到不同上游）
+    # 若 JUDGE_MODELS 配置为空或单元素，退化为"同模型双调用"
+    score_a = _single_judge_call(prompt, model=None)
+    score_b = _single_judge_call(prompt, model=JUDGE_MODELS[0] if JUDGE_MODELS else None)
+
+    if score_a is None and score_b is None:
+        return 0.0
+    if score_a is None:
+        return score_b
+    if score_b is None:
+        return score_a
+    # 保守策略：取最小值（消除抖动导致的偶发高分）
+    return min(score_a, score_b)
 
 
 def call_rag_service(query: str, topK: int = 5, tenantId: str = "default") -> Dict[str, Any]:

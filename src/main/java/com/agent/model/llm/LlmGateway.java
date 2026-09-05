@@ -2,6 +2,7 @@ package com.agent.model.llm;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -30,6 +31,20 @@ public class LlmGateway {
         return client.prompt()
                 .system(system)
                 .user(user)
+                .call()
+                .content();
+    }
+
+    /** 单轮生成（指定模型名覆盖默认配置，用于 LLM-as-judge 双模型互判等场景） */
+    public String generateWithModel(String system, String user, String model) {
+        if (model == null || model.isBlank()) {
+            return generate(system, user);
+        }
+        ChatClient client = ChatClient.builder(chatModel).build();
+        return client.prompt()
+                .system(system)
+                .user(user)
+                .options(OpenAiChatOptions.builder().model(model).build())
                 .call()
                 .content();
     }
