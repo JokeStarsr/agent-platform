@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>通用 AI 助手 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L3 编排层 · W14</span>
+      <h1>✨ 通用 AI 助手</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 意图路由 → 技能执行 → 写操作预览确认（P3 硬闸门）</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>💡 可用技能</h3>
+      <div id="skillList" class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+        <span style="color:#99a;font-size:13px">加载中...</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🗨️ 对话</h3>
+      <div id="chatBox" style="min-height:200px;max-height:400px;overflow-y:auto;border:1px solid #e3e8ef;border-radius:8px;padding:12px;margin-bottom:10px">
+        <div style="color:#99a;font-size:13px">输入问题，我会路由到合适的技能并执行。写操作会先弹预览确认。</div>
+      </div>
+      <form class="row" id="askForm">
+        <input type="text" id="message" placeholder="例如：帮我规划一次北京出差（住3晚）" style="flex:1" required>
+        <input type="text" id="skillHint" placeholder="skillHint(可选)" style="flex:0 0 140px">
+        <button type="submit" class="primary">发送</button>
+      </form>
+    </div>
+
+    <div class="card" id="previewCard" hidden>
+      <h3>⚠️ 写操作确认</h3>
+      <div id="previewBody"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="primary" id="confirmBtn">✅ 确认执行</button>
+        <button class="danger" id="rejectBtn">❌ 拒绝</button>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

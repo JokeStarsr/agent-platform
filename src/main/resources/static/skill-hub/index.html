@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Hub · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L3 编排层 · W14</span>
+      <h1>Skill Hub 技能中心</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ 技能包：安装 / 版本 / 启停 / 发布门禁（自带测试用例全绿才 PUBLISHED）</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <div class="card">
+      <h3>🧩 安装新技能</h3>
+      <p style="font-size:13px;color:#667">粘贴技能 manifest JSON（含 prompts/tools/kb/orchestration/permissions/testcases）。校验通过 → DRAFT。</p>
+      <textarea id="manifest" rows="14" placeholder='{"name":"my_skill","version":"1.0.0","displayName":"我的技能","description":"至少20字的技能描述...","category":"utility","orchestration":"agent","permissions":["READ"],"prompts":{"system":"..."},"tools":[],"kb":[],"testcases":[{"name":"t1","input":"你好","expect":"回答"}]}' style="margin-bottom:10px"></textarea>
+      <button class="primary" id="installBtn">安装（DRAFT）</button>
+    </div>
+
+    <div class="card">
+      <h3>📦 技能目录</h3>
+      <div class="row">
+        <select id="filterStatus">
+          <option value="">全部状态</option>
+          <option value="PUBLISHED">已发布</option>
+          <option value="DRAFT">草稿</option>
+          <option value="OFF_SHELF">已下架</option>
+        </select>
+        <select id="filterCategory">
+          <option value="">全部分类</option>
+          <option value="business">business</option>
+          <option value="data">data</option>
+          <option value="comm">comm</option>
+          <option value="productivity">productivity</option>
+          <option value="utility">utility</option>
+        </select>
+        <button id="filterBtn">筛选</button>
+      </div>
+      <table style="margin-top:10px">
+        <thead>
+          <tr><th>ID</th><th>技能名</th><th>展示名</th><th>分类</th><th>版本</th><th>状态</th><th>启用</th><th>操作</th></tr>
+        </thead>
+        <tbody id="tb"></tbody>
+      </table>
+      <div id="empty" class="empty" hidden>暂无技能</div>
+    </div>
+
+    <div class="card" id="detailCard" hidden>
+      <h3>📋 技能详情 / 版本历史</h3>
+      <div id="detailBody"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "appId": "it_ops",
+  "name": "IT 运维助手（新场景配置接入演示）",
+  "config": {
+    "role": {
+      "name": "IT 运维助手",
+      "description": "基于 IT 运维知识库回答账号/VPN/邮箱/软件/备份等问题"
+    },
+    "prompt": {
+      "system": "你是企业 IT 运维助手。基于 IT 运维知识库回答用户问题。\n核心规则：\n1. 只基于提供的知识库内容回答，不凭经验或外部信息。\n2. 答案必须逐句引用来源【1】【2】…整数编号，禁止用章节号。\n3. 知识库无答案时必须诚实回答“我不知道”并建议转人工。\n4. 涉及安全/权限/敏感问题低置信度时转人工。",
+      "userTemplate": "基于以上上下文回答。要求：1) 只基于上下文不外推；2) 上下文有相关信息如实作答，不得因缺操作指引表述拒答；3) 关键结论用【1】【2】标注引用；4) 置信度低时说明。\n\n用户问题：{query}",
+      "contextBudget": 8192
+    },
+    "kb": { "kbType": "TENANT", "sourcePrefix": null },
+    "tools": [],
+    "memory": { "enabled": false, "fieldWhitelist": [] },
+    "eval": { "ref": "it_ops_golden_v1", "metrics": { "goldenPassRate": 0.9 } },
+    "handoff": {
+      "enabled": true,
+      "threshold": 0.25,
+      "weights": { "retrieval": 0.55, "coverage": 0.25, "citation": 0.20 }
+    },
+    "quota": { "maxSteps": 10, "tokenBudget": 32000, "timeoutMs": 300000, "loopThreshold": 3, "maxConcurrency": 5 }
+  }
+}
