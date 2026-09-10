@@ -1,0 +1,413 @@
+{
+  "description": "NL2SQL 评测集（50 条用例）",
+  "version": "1.0",
+  "categories": {
+    "simple_aggregation": "简单聚合（SUM/AVG/COUNT/MIN/MAX）",
+    "group_aggregation": "分组聚合（GROUP BY）",
+    "top_n": "Top-N 排名（ORDER BY + LIMIT）",
+    "comparison": "对比分析（同比/环比/多条件）",
+    "complex_join": "复杂 JOIN（多表关联 + 子查询）"
+  },
+  "cases": [
+    {
+      "id": 1,
+      "category": "simple_aggregation",
+      "question": "上月销售额是多少",
+      "expected_sql_keywords": ["SUM", "amount", "WHERE", "status", "paid", "shipped", "completed", "DATE_TRUNC", "month"],
+      "expected_columns": ["total_sales"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 2,
+      "category": "simple_aggregation",
+      "question": "总共有多少客户",
+      "expected_sql_keywords": ["COUNT", "t_customer"],
+      "expected_columns": ["customer_count"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 3,
+      "category": "simple_aggregation",
+      "question": "平均订单金额是多少",
+      "expected_sql_keywords": ["AVG", "amount", "t_order"],
+      "expected_columns": ["avg_order_value"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 4,
+      "category": "simple_aggregation",
+      "question": "本月有多少笔订单",
+      "expected_sql_keywords": ["COUNT", "t_order", "DATE_TRUNC", "month", "CURRENT_DATE"],
+      "expected_columns": ["order_count"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 5,
+      "category": "simple_aggregation",
+      "question": "库存最少的产品库存量是多少",
+      "expected_sql_keywords": ["MIN", "stock", "t_product"],
+      "expected_columns": ["min_stock"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 6,
+      "category": "simple_aggregation",
+      "question": "产品单价最高是多少",
+      "expected_sql_keywords": ["MAX", "price", "t_product"],
+      "expected_columns": ["max_price"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 7,
+      "category": "simple_aggregation",
+      "question": "已完成订单的总金额",
+      "expected_sql_keywords": ["SUM", "amount", "status", "completed"],
+      "expected_columns": ["total_completed"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 8,
+      "category": "simple_aggregation",
+      "question": "取消订单有多少笔",
+      "expected_sql_keywords": ["COUNT", "status", "cancelled"],
+      "expected_columns": ["cancelled_count"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 9,
+      "category": "simple_aggregation",
+      "question": "待支付订单有多少",
+      "expected_sql_keywords": ["COUNT", "status", "pending"],
+      "expected_columns": ["pending_count"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 10,
+      "category": "simple_aggregation",
+      "question": "产品总库存量",
+      "expected_sql_keywords": ["SUM", "stock", "t_product"],
+      "expected_columns": ["total_stock"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 11,
+      "category": "group_aggregation",
+      "question": "各地区的客户数",
+      "expected_sql_keywords": ["region", "COUNT", "GROUP BY", "region"],
+      "expected_columns": ["region", "customer_count"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 12,
+      "category": "group_aggregation",
+      "question": "各产品类别的销售额",
+      "expected_sql_keywords": ["category", "SUM", "subtotal", "GROUP BY", "category"],
+      "expected_columns": ["category", "total_sales"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 13,
+      "category": "group_aggregation",
+      "question": "各客户等级的订单数",
+      "expected_sql_keywords": ["level", "COUNT", "GROUP BY", "level"],
+      "expected_columns": ["level", "order_count"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 14,
+      "category": "group_aggregation",
+      "question": "各订单状态的数量",
+      "expected_sql_keywords": ["status", "COUNT", "GROUP BY", "status"],
+      "expected_columns": ["status", "count"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 15,
+      "category": "group_aggregation",
+      "question": "各地区的平均订单金额",
+      "expected_sql_keywords": ["region", "AVG", "amount", "GROUP BY", "region"],
+      "expected_columns": ["region", "avg_amount"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 16,
+      "category": "group_aggregation",
+      "question": "每个月的订单数",
+      "expected_sql_keywords": ["DATE_TRUNC", "month", "COUNT", "GROUP BY"],
+      "expected_columns": ["month", "order_count"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 17,
+      "category": "group_aggregation",
+      "question": "各产品的销售数量",
+      "expected_sql_keywords": ["product_id", "SUM", "quantity", "GROUP BY", "product_id"],
+      "expected_columns": ["product_id", "total_quantity"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 18,
+      "category": "group_aggregation",
+      "question": "各地区的已支付订单金额",
+      "expected_sql_keywords": ["region", "SUM", "amount", "status", "paid", "GROUP BY", "region"],
+      "expected_columns": ["region", "paid_amount"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 19,
+      "category": "group_aggregation",
+      "question": "各客户等级的平均消费",
+      "expected_sql_keywords": ["level", "AVG", "amount", "GROUP BY", "level"],
+      "expected_columns": ["level", "avg_spending"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 20,
+      "category": "group_aggregation",
+      "question": "各产品类别的平均单价",
+      "expected_sql_keywords": ["category", "AVG", "price", "GROUP BY", "category"],
+      "expected_columns": ["category", "avg_price"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 21,
+      "category": "top_n",
+      "question": "销售额最高的 3 个产品",
+      "expected_sql_keywords": ["SUM", "subtotal", "ORDER BY", "DESC", "LIMIT 3"],
+      "expected_columns": ["product_name", "total_sales"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 22,
+      "category": "top_n",
+      "question": "消费最多的 5 个客户",
+      "expected_sql_keywords": ["SUM", "amount", "ORDER BY", "DESC", "LIMIT 5"],
+      "expected_columns": ["customer_name", "total_spending"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 23,
+      "category": "top_n",
+      "question": "订单数最多的地区",
+      "expected_sql_keywords": ["COUNT", "GROUP BY", "region", "ORDER BY", "DESC", "LIMIT 1"],
+      "expected_columns": ["region", "order_count"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 24,
+      "category": "top_n",
+      "question": "库存最多的 10 个产品",
+      "expected_sql_keywords": ["stock", "ORDER BY", "DESC", "LIMIT 10"],
+      "expected_columns": ["product_name", "stock"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 25,
+      "category": "top_n",
+      "question": "单价最低的 5 个产品",
+      "expected_sql_keywords": ["price", "ORDER BY", "ASC", "LIMIT 5"],
+      "expected_columns": ["product_name", "price"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 26,
+      "category": "top_n",
+      "question": "本月销售额最高的客户",
+      "expected_sql_keywords": ["SUM", "amount", "DATE_TRUNC", "month", "ORDER BY", "DESC", "LIMIT 1"],
+      "expected_columns": ["customer_name", "total_sales"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 27,
+      "category": "top_n",
+      "question": "销量最好的产品类别",
+      "expected_sql_keywords": ["SUM", "quantity", "category", "GROUP BY", "ORDER BY", "DESC", "LIMIT 1"],
+      "expected_columns": ["category", "total_quantity"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 28,
+      "category": "top_n",
+      "question": "最近 7 天订单最多的客户",
+      "expected_sql_keywords": ["COUNT", "DATE", "CURRENT_DATE", "INTERVAL", "7", "ORDER BY", "DESC", "LIMIT 1"],
+      "expected_columns": ["customer_name", "order_count"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 29,
+      "category": "top_n",
+      "question": "取消订单最多的产品",
+      "expected_sql_keywords": ["COUNT", "status", "cancelled", "GROUP BY", "ORDER BY", "DESC", "LIMIT 1"],
+      "expected_columns": ["product_name", "cancelled_count"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 30,
+      "category": "top_n",
+      "question": "客单价最高的 3 个地区",
+      "expected_sql_keywords": ["AVG", "amount", "GROUP BY", "region", "ORDER BY", "DESC", "LIMIT 3"],
+      "expected_columns": ["region", "avg_order_value"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 31,
+      "category": "comparison",
+      "question": "华东和华南哪个地区客户多",
+      "expected_sql_keywords": ["COUNT", "region", "华东", "华南", "OR"],
+      "expected_columns": ["region", "customer_count"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 32,
+      "category": "comparison",
+      "question": "电子产品和服装的销售额对比",
+      "expected_sql_keywords": ["SUM", "subtotal", "category", "电子产品", "服装", "OR"],
+      "expected_columns": ["category", "total_sales"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 33,
+      "category": "comparison",
+      "question": "本月和上月订单数对比",
+      "expected_sql_keywords": ["COUNT", "DATE_TRUNC", "month", "CURRENT_DATE", "INTERVAL"],
+      "expected_columns": ["month", "order_count"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 34,
+      "category": "comparison",
+      "question": "gold 客户和 silver 客户的平均消费对比",
+      "expected_sql_keywords": ["AVG", "amount", "level", "gold", "silver", "OR"],
+      "expected_columns": ["level", "avg_spending"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 35,
+      "category": "comparison",
+      "question": "已支付订单和已发货订单的数量对比",
+      "expected_sql_keywords": ["COUNT", "status", "paid", "shipped", "OR"],
+      "expected_columns": ["status", "count"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 36,
+      "category": "comparison",
+      "question": "华北地区客户的平均订单金额与全国平均对比",
+      "expected_sql_keywords": ["AVG", "amount", "region", "华北"],
+      "expected_columns": ["avg_huabei", "avg_all"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 37,
+      "category": "comparison",
+      "question": "本周和上周的销售额对比",
+      "expected_sql_keywords": ["SUM", "amount", "DATE_TRUNC", "week", "CURRENT_DATE", "INTERVAL"],
+      "expected_columns": ["week", "total_sales"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 38,
+      "category": "comparison",
+      "question": "platinum 客户的订单数占全部订单的比例",
+      "expected_sql_keywords": ["COUNT", "level", "platinum"],
+      "expected_columns": ["platinum_count", "total_count", "ratio"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 39,
+      "category": "comparison",
+      "question": "食品类和图书类的平均单价差多少",
+      "expected_sql_keywords": ["AVG", "price", "category", "食品", "图书"],
+      "expected_columns": ["food_avg", "book_avg", "difference"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 40,
+      "category": "comparison",
+      "question": "已完成订单和已取消订单的金额对比",
+      "expected_sql_keywords": ["SUM", "amount", "status", "completed", "cancelled", "OR"],
+      "expected_columns": ["status", "total_amount"],
+      "difficulty": "easy"
+    },
+    {
+      "id": 41,
+      "category": "complex_join",
+      "question": "购买过产品A的客户中，等级为gold的有多少",
+      "expected_sql_keywords": ["JOIN", "t_order_item", "t_product", "t_customer", "name", "产品A", "level", "gold"],
+      "expected_columns": ["gold_customer_count"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 42,
+      "category": "complex_join",
+      "question": "华东地区客户购买最多的产品类别",
+      "expected_sql_keywords": ["JOIN", "t_customer", "t_order", "t_order_item", "t_product", "region", "华东", "category"],
+      "expected_columns": ["category", "total_quantity"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 43,
+      "category": "complex_join",
+      "question": "哪些客户既买过电子产品又买过服装",
+      "expected_sql_keywords": ["JOIN", "t_customer", "t_order", "t_order_item", "t_product", "category", "电子产品", "服装", "INTERSECT"],
+      "expected_columns": ["customer_name"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 44,
+      "category": "complex_join",
+      "question": "从未下过单的客户有哪些",
+      "expected_sql_keywords": ["NOT IN", "t_customer", "t_order", "customer_id"],
+      "expected_columns": ["customer_name"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 45,
+      "category": "complex_join",
+      "question": "每个客户购买的不同产品类别数",
+      "expected_sql_keywords": ["JOIN", "t_customer", "t_order", "t_order_item", "t_product", "COUNT", "DISTINCT", "category", "GROUP BY"],
+      "expected_columns": ["customer_name", "category_count"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 46,
+      "category": "complex_join",
+      "question": "销售额超过 10000 的客户及其订单详情",
+      "expected_sql_keywords": ["JOIN", "t_customer", "t_order", "SUM", "amount", "HAVING", "10000"],
+      "expected_columns": ["customer_name", "order_id", "amount"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 47,
+      "category": "complex_join",
+      "question": "购买了所有产品类别的客户",
+      "expected_sql_keywords": ["JOIN", "t_customer", "t_order", "t_order_item", "t_product", "COUNT", "DISTINCT", "category", "HAVING"],
+      "expected_columns": ["customer_name"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 48,
+      "category": "complex_join",
+      "question": "每个地区销售额最高的客户",
+      "expected_sql_keywords": ["JOIN", "t_customer", "t_order", "SUM", "amount", "region", "GROUP BY", "ORDER BY", "DESC"],
+      "expected_columns": ["region", "customer_name", "total_sales"],
+      "difficulty": "hard"
+    },
+    {
+      "id": 49,
+      "category": "complex_join",
+      "question": "哪些产品从未被购买过",
+      "expected_sql_keywords": ["NOT IN", "t_product", "t_order_item", "product_id"],
+      "expected_columns": ["product_name"],
+      "difficulty": "medium"
+    },
+    {
+      "id": 50,
+      "category": "complex_join",
+      "question": "每个客户的最近一次订单时间和金额",
+      "expected_sql_keywords": ["JOIN", "t_customer", "t_order", "MAX", "created_at", "GROUP BY"],
+      "expected_columns": ["customer_name", "last_order_date", "amount"],
+      "difficulty": "hard"
+    }
+  ]
+}
