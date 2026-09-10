@@ -1,0 +1,321 @@
+{
+  "description": "Data Agent 分析任务评测集（30 条用例，含陷阱题）",
+  "version": "1.0",
+  "categories": {
+    "basic": "基础查询（单表聚合）",
+    "join": "复杂 JOIN（多表关联）",
+    "trap": "陷阱题（空集/单位/时区/边界条件）"
+  },
+  "tasks": [
+    {
+      "id": 1,
+      "category": "basic",
+      "question": "上个月总销售额是多少",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["total_sales"],
+      "expected_keywords": ["SUM", "amount", "WHERE", "created_at", "INTERVAL"],
+      "difficulty": "easy",
+      "trap_type": null
+    },
+    {
+      "id": 2,
+      "category": "basic",
+      "question": "有多少个客户",
+      "expected_tables": ["t_customer"],
+      "expected_columns": ["customer_count"],
+      "expected_keywords": ["COUNT", "customer_id"],
+      "difficulty": "easy",
+      "trap_type": null
+    },
+    {
+      "id": 3,
+      "category": "basic",
+      "question": "平均订单金额",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["avg_amount"],
+      "expected_keywords": ["AVG", "amount"],
+      "difficulty": "easy",
+      "trap_type": null
+    },
+    {
+      "id": 4,
+      "category": "basic",
+      "question": "销售额最高的产品",
+      "expected_tables": ["t_order_item", "t_product"],
+      "expected_columns": ["product_name", "total_sales"],
+      "expected_keywords": ["SUM", "subtotal", "GROUP BY", "ORDER BY", "DESC", "LIMIT"],
+      "difficulty": "medium",
+      "trap_type": null
+    },
+    {
+      "id": 5,
+      "category": "basic",
+      "question": "各地区的客户数",
+      "expected_tables": ["t_customer"],
+      "expected_columns": ["region", "customer_count"],
+      "expected_keywords": ["region", "COUNT", "GROUP BY"],
+      "difficulty": "easy",
+      "trap_type": null
+    },
+    {
+      "id": 6,
+      "category": "basic",
+      "question": "待支付订单有多少",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["pending_count"],
+      "expected_keywords": ["COUNT", "status", "pending"],
+      "difficulty": "easy",
+      "trap_type": null
+    },
+    {
+      "id": 7,
+      "category": "basic",
+      "question": "库存最少的产品",
+      "expected_tables": ["t_product"],
+      "expected_columns": ["product_name", "stock"],
+      "expected_keywords": ["stock", "ORDER BY", "ASC", "LIMIT 1"],
+      "difficulty": "easy",
+      "trap_type": null
+    },
+    {
+      "id": 8,
+      "category": "basic",
+      "question": "本月新增客户数",
+      "expected_tables": ["t_customer"],
+      "expected_columns": ["new_customers"],
+      "expected_keywords": ["COUNT", "created_at", "DATE_TRUNC", "month"],
+      "difficulty": "medium",
+      "trap_type": null
+    },
+    {
+      "id": 9,
+      "category": "basic",
+      "question": "已完成的订单总金额",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["completed_total"],
+      "expected_keywords": ["SUM", "amount", "status", "completed"],
+      "difficulty": "easy",
+      "trap_type": null
+    },
+    {
+      "id": 10,
+      "category": "basic",
+      "question": "各产品类别的平均价格",
+      "expected_tables": ["t_product"],
+      "expected_columns": ["category", "avg_price"],
+      "expected_keywords": ["category", "AVG", "price", "GROUP BY"],
+      "difficulty": "easy",
+      "trap_type": null
+    },
+    {
+      "id": 11,
+      "category": "join",
+      "question": "每个客户的订单数和总金额",
+      "expected_tables": ["t_customer", "t_order"],
+      "expected_columns": ["customer_name", "order_count", "total_amount"],
+      "expected_keywords": ["JOIN", "COUNT", "SUM", "GROUP BY"],
+      "difficulty": "medium",
+      "trap_type": null
+    },
+    {
+      "id": 12,
+      "category": "join",
+      "question": "销售额最高的客户及其消费金额",
+      "expected_tables": ["t_customer", "t_order"],
+      "expected_columns": ["customer_name", "total_spending"],
+      "expected_keywords": ["JOIN", "SUM", "amount", "GROUP BY", "ORDER BY", "DESC", "LIMIT 1"],
+      "difficulty": "medium",
+      "trap_type": null
+    },
+    {
+      "id": 13,
+      "category": "join",
+      "question": "哪些客户购买过电子产品",
+      "expected_tables": ["t_customer", "t_order", "t_order_item", "t_product"],
+      "expected_columns": ["customer_name"],
+      "expected_keywords": ["JOIN", "category", "电子产品", "DISTINCT"],
+      "difficulty": "hard",
+      "trap_type": null
+    },
+    {
+      "id": 14,
+      "category": "join",
+      "question": "每个地区销售额最高的产品",
+      "expected_tables": ["t_customer", "t_order", "t_order_item", "t_product"],
+      "expected_columns": ["region", "product_name", "total_sales"],
+      "expected_keywords": ["JOIN", "region", "SUM", "subtotal", "GROUP BY", "ORDER BY"],
+      "difficulty": "hard",
+      "trap_type": null
+    },
+    {
+      "id": 15,
+      "category": "join",
+      "question": "从未下过单的客户",
+      "expected_tables": ["t_customer", "t_order"],
+      "expected_columns": ["customer_name"],
+      "expected_keywords": ["NOT IN", "LEFT JOIN", "IS NULL"],
+      "difficulty": "medium",
+      "trap_type": null
+    },
+    {
+      "id": 16,
+      "category": "join",
+      "question": "购买过所有产品类别的客户",
+      "expected_tables": ["t_customer", "t_order", "t_order_item", "t_product"],
+      "expected_columns": ["customer_name"],
+      "expected_keywords": ["JOIN", "COUNT", "DISTINCT", "category", "HAVING"],
+      "difficulty": "hard",
+      "trap_type": null
+    },
+    {
+      "id": 17,
+      "category": "join",
+      "question": "每个客户的最近一次订单",
+      "expected_tables": ["t_customer", "t_order"],
+      "expected_columns": ["customer_name", "order_id", "created_at"],
+      "expected_keywords": ["JOIN", "MAX", "created_at", "GROUP BY"],
+      "difficulty": "medium",
+      "trap_type": null
+    },
+    {
+      "id": 18,
+      "category": "join",
+      "question": "哪些产品同时被 gold 和 silver 客户购买过",
+      "expected_tables": ["t_customer", "t_order", "t_order_item", "t_product"],
+      "expected_columns": ["product_name"],
+      "expected_keywords": ["JOIN", "level", "gold", "silver", "INTERSECT"],
+      "difficulty": "hard",
+      "trap_type": null
+    },
+    {
+      "id": 19,
+      "category": "join",
+      "question": "每个产品被多少个不同客户购买过",
+      "expected_tables": ["t_product", "t_order_item", "t_order"],
+      "expected_columns": ["product_name", "customer_count"],
+      "expected_keywords": ["JOIN", "COUNT", "DISTINCT", "customer_id", "GROUP BY"],
+      "difficulty": "medium",
+      "trap_type": null
+    },
+    {
+      "id": 20,
+      "category": "join",
+      "question": "订单金额超过 10000 的客户及其订单详情",
+      "expected_tables": ["t_customer", "t_order"],
+      "expected_columns": ["customer_name", "order_id", "amount"],
+      "expected_keywords": ["JOIN", "SUM", "amount", "HAVING", "10000"],
+      "difficulty": "medium",
+      "trap_type": null
+    },
+    {
+      "id": 21,
+      "category": "trap",
+      "question": "2099年的销售额是多少",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["total_sales"],
+      "expected_keywords": ["SUM", "amount", "WHERE", "created_at", "2099"],
+      "difficulty": "easy",
+      "trap_type": "empty_result",
+      "trap_description": "未来年份，结果应为空或 0，不应报错"
+    },
+    {
+      "id": 22,
+      "category": "trap",
+      "question": "状态为 refunded 的订单有多少",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["refunded_count"],
+      "expected_keywords": ["COUNT", "status", "refunded"],
+      "difficulty": "easy",
+      "trap_type": "empty_result",
+      "trap_description": "不存在的状态，结果应为 0"
+    },
+    {
+      "id": 23,
+      "category": "trap",
+      "question": "产品 ID 为 999999 的销售记录",
+      "expected_tables": ["t_order_item", "t_product"],
+      "expected_columns": ["product_name", "total_sales"],
+      "expected_keywords": ["product_id", "999999"],
+      "difficulty": "easy",
+      "trap_type": "empty_result",
+      "trap_description": "不存在的产品 ID，结果应为空"
+    },
+    {
+      "id": 24,
+      "category": "trap",
+      "question": "上个月销售额是多少万元",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["total_sales_wan"],
+      "expected_keywords": ["SUM", "amount", "10000", "/"],
+      "difficulty": "medium",
+      "trap_type": "unit_conversion",
+      "trap_description": "要求万元单位，SQL 应除以 10000"
+    },
+    {
+      "id": 25,
+      "category": "trap",
+      "question": "订单金额的平均值，保留两位小数",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["avg_amount"],
+      "expected_keywords": ["AVG", "amount", "ROUND", "2"],
+      "difficulty": "medium",
+      "trap_type": "precision",
+      "trap_description": "要求保留两位小数，应使用 ROUND"
+    },
+    {
+      "id": 26,
+      "category": "trap",
+      "question": "今年第一季度的销售额",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["q1_sales"],
+      "expected_keywords": ["SUM", "amount", "EXTRACT", "QUARTER", "1"],
+      "difficulty": "medium",
+      "trap_type": "timezone",
+      "trap_description": "季度计算，需注意时区（UTC vs 本地）"
+    },
+    {
+      "id": 27,
+      "category": "trap",
+      "question": "订单金额最大的前 10 个订单",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["order_id", "amount"],
+      "expected_keywords": ["ORDER BY", "amount", "DESC", "LIMIT 10"],
+      "difficulty": "easy",
+      "trap_type": "boundary",
+      "trap_description": "如果订单总数不足 10 个，应返回全部而非报错"
+    },
+    {
+      "id": 28,
+      "category": "trap",
+      "question": "销售额最低的 3 个产品（包括销售额为 0 的）",
+      "expected_tables": ["t_product", "t_order_item"],
+      "expected_columns": ["product_name", "total_sales"],
+      "expected_keywords": ["LEFT JOIN", "COALESCE", "SUM", "subtotal", "0", "ORDER BY", "ASC", "LIMIT 3"],
+      "difficulty": "hard",
+      "trap_type": "null_handling",
+      "trap_description": "未销售的产品销售额为 NULL，应用 COALESCE 转为 0"
+    },
+    {
+      "id": 29,
+      "category": "trap",
+      "question": "每个客户的平均订单金额，排除金额为 0 的订单",
+      "expected_tables": ["t_customer", "t_order"],
+      "expected_columns": ["customer_name", "avg_amount"],
+      "expected_keywords": ["JOIN", "AVG", "amount", "WHERE", "amount", ">", "0", "GROUP BY"],
+      "difficulty": "medium",
+      "trap_type": "filter_condition",
+      "trap_description": "需排除金额为 0 的订单，否则平均值会被拉低"
+    },
+    {
+      "id": 30,
+      "category": "trap",
+      "question": "对比上月和本月的销售额增长率",
+      "expected_tables": ["t_order"],
+      "expected_columns": ["last_month_sales", "this_month_sales", "growth_rate"],
+      "expected_keywords": ["SUM", "amount", "CASE", "WHEN", "DATE_TRUNC", "month", "/"],
+      "difficulty": "hard",
+      "trap_type": "complex_calculation",
+      "trap_description": "增长率计算，需注意除数为 0 的情况（上月销售额为 0）"
+    }
+  ]
+}
