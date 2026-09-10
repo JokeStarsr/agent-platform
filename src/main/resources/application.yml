@@ -31,6 +31,10 @@ agent-platform:
       sql-timeout-sec: 10
 
 app:
+  # W18 结果缓存（NL2SQL 高频同问命中缓存）
+  result-cache:
+    ttl-seconds: 300        # 缓存 TTL（5 分钟）
+    max-entries: 1000       # 最大条目数（LRU 淘汰）
   rag:
     enabled: true        # ZHIPUAI_API_KEY 已配置，启用 RAG 服务
     handoff:             # L5 转人工门控（P1 收口，docs/design/api/20260830-handoff-mechanism.md）
@@ -40,6 +44,19 @@ app:
       w-citation: 0.20   # 引用完整率权重
   audit:
     enabled: true        # 审计日志切面（P1 收口 #4，docs/design/api/20260830-audit-chatui.md）
+
+# W17 Token 计量单价（元/千 Token）
+token-pricing:
+  models:
+    claude-sonnet-4-5-20250929:
+      prompt: 0.003
+      completion: 0.015
+    gpt-4o:
+      prompt: 0.005
+      completion: 0.015
+    deepseek-chat:
+      prompt: 0.001
+      completion: 0.002
 
 server:
   port: 8080

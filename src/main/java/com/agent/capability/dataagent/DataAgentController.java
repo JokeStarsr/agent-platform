@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.*;
 public class DataAgentController {
 
     private final DataAgentService dataAgentService;
+    private final ResultCache resultCache;
 
-    public DataAgentController(DataAgentService dataAgentService) {
+    public DataAgentController(DataAgentService dataAgentService, ResultCache resultCache) {
         this.dataAgentService = dataAgentService;
+        this.resultCache = resultCache;
     }
 
     /**
@@ -30,7 +32,7 @@ public class DataAgentController {
     @PostMapping("/query")
     public Result<QueryResult> query(@Valid @RequestBody QueryRequest req,
                                      @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
-        return Result.ok(dataAgentService.query(req.question(), req.maxRows()));
+        return Result.ok(dataAgentService.query(tenantId, req.question(), req.maxRows()));
     }
 
     /**
@@ -41,16 +43,25 @@ public class DataAgentController {
     public Result<QueryResult> queryWithVerification(@Valid @RequestBody QueryRequest req,
                                                       @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
         return Result.ok(dataAgentService.queryWithVerification(
-                req.question(), req.maxRows(), req.requireVerification()));
+                tenantId, req.question(), req.maxRows(), req.requireVerification()));
     }
 
     /**
-     * 刷新 Schema 缓存（管理 API，触发重新加载 t_schema_metadata）
+     * 刷新 Schema 缓存（管理 API，触发重新加载 t_schema_metadata + 清空结果缓存）
      */
     @PostMapping("/schema/refresh")
     public Result<Void> refreshSchema() {
         dataAgentService.refreshSchemaCache();
+        resultCache.clear();
         return Result.ok(null);
+    }
+
+    /**
+     * 结果缓存统计（命中率/容量）。
+     */
+    @GetMapping("/cache/stats")
+    public Result<java.util.Map<String, Object>> cacheStats() {
+        return Result.ok(resultCache.stats());
     }
 
     /**

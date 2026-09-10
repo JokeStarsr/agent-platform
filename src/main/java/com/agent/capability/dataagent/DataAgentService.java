@@ -32,16 +32,19 @@ public class DataAgentService {
     private final LlmGateway llm;
     private final SqlSandboxService sqlSandbox;
     private final CodeSandboxService codeSandbox;
+    private final ResultCache resultCache;
 
     // 内存缓存：tableName → List<SchemaMetadata>
     private Map<String, List<SchemaMetadata>> schemaCache = new HashMap<>();
 
     public DataAgentService(SchemaMetadataRepository schemaRepo, LlmGateway llm,
-                            SqlSandboxService sqlSandbox, CodeSandboxService codeSandbox) {
+                            SqlSandboxService sqlSandbox, CodeSandboxService codeSandbox,
+                            ResultCache resultCache) {
         this.schemaRepo = schemaRepo;
         this.llm = llm;
         this.sqlSandbox = sqlSandbox;
         this.codeSandbox = codeSandbox;
+        this.resultCache = resultCache;
     }
 
     @PostConstruct
@@ -58,15 +61,24 @@ public class DataAgentService {
     }
 
     /**
-     * NL2SQL 查询：自然语言 → SQL → 执行 → 返回结果。
+     * NL2SQL 查询：自然语言 → SQL → 执行 → 返回结果（带结果缓存）。
      *
+     * @param tenantId 租户 ID
      * @param question 用户自然语言问题
      * @param maxRows  最大返回行数（默认 100）
      * @return 查询结果（含 SQL 展示）
      */
-    public QueryResult query(String question, Integer maxRows) {
+    public QueryResult query(String tenantId, String question, Integer maxRows) {
         if (question == null || question.isBlank()) {
             throw new BizException(400, "问题不能为空");
+        }
+        String effTenant = tenantId == null || tenantId.isBlank() ? "default" : tenantId;
+
+        // 0. 检查结果缓存（高频同问命中直接返回）
+        QueryResult cached = resultCache.get(effTenant, question, maxRows);
+        if (cached != null) {
+            log.info("缓存命中: tenant={}, question={}", effTenant, question);
+            return cached;
         }
 
         // 1. 构建 Prompt（Schema 语义层 + few-shot 示例）
@@ -99,7 +111,7 @@ public class DataAgentService {
 
         // 6. 组装结果（不含 verification）
         long totalDuration = llmDuration + sqlResult.durationMs();
-        return new QueryResult(
+        QueryResult result = new QueryResult(
                 question,
                 checkResult.sql(),
                 sqlResult.columns(),
@@ -111,6 +123,11 @@ public class DataAgentService {
                 sqlResult.durationMs(),
                 null  // verification 由 queryWithVerification 填充
         );
+
+        // 7. 写入结果缓存（高频同问命中下一次直接返回）
+        resultCache.put(effTenant, question, maxRows, result);
+
+        return result;
     }
 
     /**
@@ -236,13 +253,34 @@ public class DataAgentService {
      * @param requireVerification 是否要求数值复算校验（默认 true）
      * @return 查询结果（含 SQL 展示 + 复算报告）
      */
-    public QueryResult queryWithVerification(String question, Integer maxRows, Boolean requireVerification) {
-        // 1. 执行 NL2SQL 查询（不含 verification）
-        QueryResult baseResult = query(question, maxRows);
+    /**
+     * NL2SQL 查询（含数值复算校验）：自然语言 → SQL → 执行 → 复算校验 → 返回结果。
+     *
+     * @param tenantId           租户 ID
+     * @param question           用户自然语言问题
+     * @param maxRows            最大返回行数（默认 100）
+     * @param requireVerification 是否要求数值复算校验（默认 true）
+     * @return 查询结果（含 SQL 展示 + 复算报告）
+     */
+    public QueryResult queryWithVerification(String tenantId, String question, Integer maxRows, Boolean requireVerification) {
+        String effTenant = tenantId == null || tenantId.isBlank() ? "default" : tenantId;
+        boolean needVerify = requireVerification == null || requireVerification;
+
+        // 0. 检查"含复算"完整结果缓存（命中则跳过 LLM 生成 + 校验全链路）
+        if (needVerify) {
+            QueryResult cachedVerified = resultCache.getVerified(effTenant, question, maxRows);
+            if (cachedVerified != null) {
+                log.info("缓存命中（含复算）: tenant={}, question={}", effTenant, question);
+                return cachedVerified;
+            }
+        }
+
+        // 1. 执行 NL2SQL 查询（不含 verification；内部会查"基础结果"缓存）
+        QueryResult baseResult = query(effTenant, question, maxRows);
 
         // 2. 数值复算校验（如要求）
         VerificationResult verification = null;
-        if (requireVerification == null || requireVerification) {
+        if (needVerify) {
             verification = verifyNumericalConclusions(
                     baseResult.question(),
                     baseResult.sql(),
@@ -252,7 +290,7 @@ public class DataAgentService {
         }
 
         // 3. 组装完整结果
-        return new QueryResult(
+        QueryResult result = new QueryResult(
                 baseResult.question(),
                 baseResult.sql(),
                 baseResult.columns(),
@@ -264,6 +302,13 @@ public class DataAgentService {
                 baseResult.sqlDurationMs(),
                 verification
         );
+
+        // 4. 写入"含复算"完整结果缓存
+        if (needVerify) {
+            resultCache.putVerified(effTenant, question, maxRows, result);
+        }
+
+        return result;
     }
 
     /**
