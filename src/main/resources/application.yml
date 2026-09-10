@@ -111,6 +111,7 @@ spring:
         - classpath:schema-multi-agent.sql
         - classpath:schema-data-agent.sql
         - classpath:schema-data-lineage.sql
+        - classpath:schema-open-platform.sql
 
   # W7 记忆/上下文配置（docs/design/architecture/20260901-memory-context.md §2.3）
   memory:
