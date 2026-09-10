@@ -1,4 +1,4 @@
-package com.agent.costdashboard;
+package com.agent.app.costdashboard;
 
 import com.agent.data.tokenmeter.BudgetAlertHistoryRepository;
 import com.agent.data.tokenmeter.BudgetAlertHistoryRepository.BudgetAlertHistory;

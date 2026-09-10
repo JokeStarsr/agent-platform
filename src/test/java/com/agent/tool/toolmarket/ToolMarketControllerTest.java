@@ -1,5 +1,8 @@
 package com.agent.tool.toolmarket;
 
+import com.agent.data.openplatform.ApiKeyRepository;
+import com.agent.data.openplatform.TenantQuotaRepository;
+import com.agent.data.tokenmeter.TokenUsageDailyRepository;
 import com.agent.data.toolmarket.ToolCatalogRepository;
 import com.agent.data.toolmarket.ToolCatalogRepository.CatalogRow;
 import com.agent.data.toolmarket.ToolStatsRepository;
@@ -42,6 +45,16 @@ class ToolMarketControllerTest {
 
     @MockBean
     private ToolRegistry toolRegistry;
+
+    // W17: Mock OpenApiFilter dependencies
+    @MockBean
+    private ApiKeyRepository apiKeyRepository;
+
+    @MockBean
+    private TenantQuotaRepository tenantQuotaRepository;
+
+    @MockBean
+    private TokenUsageDailyRepository tokenUsageDailyRepository;
 
     private CatalogRow row(long id, String name, String status) {
         return new CatalogRow(id, name, 1, name, "desc", "data", "{}", "READ",

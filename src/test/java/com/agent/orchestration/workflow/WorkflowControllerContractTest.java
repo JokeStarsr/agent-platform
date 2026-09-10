@@ -1,6 +1,9 @@
 package com.agent.orchestration.workflow;
 
 import com.agent.common.PageResult;
+import com.agent.data.openplatform.ApiKeyRepository;
+import com.agent.data.openplatform.TenantQuotaRepository;
+import com.agent.data.tokenmeter.TokenUsageDailyRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -38,6 +41,16 @@ class WorkflowControllerContractTest {
 
     @MockBean
     private WorkflowFlows flows;
+
+    // W17: Mock OpenApiFilter dependencies
+    @MockBean
+    private ApiKeyRepository apiKeyRepository;
+
+    @MockBean
+    private TenantQuotaRepository tenantQuotaRepository;
+
+    @MockBean
+    private TokenUsageDailyRepository tokenUsageDailyRepository;
 
     private static Map<String, Object> instItem(long instanceId, String status) {
         Map<String, Object> m = new LinkedHashMap<>();

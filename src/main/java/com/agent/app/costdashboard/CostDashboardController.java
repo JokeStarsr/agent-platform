@@ -1,4 +1,4 @@
-package com.agent.costdashboard;
+package com.agent.app.costdashboard;
 
 import com.agent.common.Result;
 import org.springframework.web.bind.annotation.*;

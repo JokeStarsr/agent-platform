@@ -3,6 +3,9 @@ package com.agent.orchestration.appfactory;
 import com.agent.common.BizException;
 import com.agent.data.application.AppRepository;
 import com.agent.data.application.AppRepository.AppRow;
+import com.agent.data.openplatform.ApiKeyRepository;
+import com.agent.data.openplatform.TenantQuotaRepository;
+import com.agent.data.tokenmeter.TokenUsageDailyRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +47,16 @@ class AppControllerContractTest {
 
     @MockBean
     private AppValidator validator;
+
+    // W17: Mock OpenApiFilter dependencies
+    @MockBean
+    private ApiKeyRepository apiKeyRepository;
+
+    @MockBean
+    private TenantQuotaRepository tenantQuotaRepository;
+
+    @MockBean
+    private TokenUsageDailyRepository tokenUsageDailyRepository;
 
     private static final String CFG = """
             {"role":{"name":"客服"},"prompt":{"system":"你是客服"},

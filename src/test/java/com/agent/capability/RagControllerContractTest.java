@@ -3,6 +3,9 @@ package com.agent.capability;
 import com.agent.capability.RagService.RagResult;
 import com.agent.common.BizException;
 import com.agent.common.Result;
+import com.agent.data.openplatform.ApiKeyRepository;
+import com.agent.data.openplatform.TenantQuotaRepository;
+import com.agent.data.tokenmeter.TokenUsageDailyRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -36,6 +39,16 @@ class RagControllerContractTest {
 
     @MockBean
     private RagService ragService;
+
+    // W17: Mock OpenApiFilter dependencies
+    @MockBean
+    private ApiKeyRepository apiKeyRepository;
+
+    @MockBean
+    private TenantQuotaRepository tenantQuotaRepository;
+
+    @MockBean
+    private TokenUsageDailyRepository tokenUsageDailyRepository;
 
     private RagService.RagResult okResult() {
         RagResult r = new RagResult("7日内可无理由退货。",

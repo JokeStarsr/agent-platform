@@ -2,6 +2,9 @@ package com.agent.tool.mcp;
 
 import com.agent.data.toolgrant.ToolGrantRepository;
 import com.agent.data.toolgrant.ToolGrantRepository.GrantRow;
+import com.agent.data.openplatform.ApiKeyRepository;
+import com.agent.data.openplatform.TenantQuotaRepository;
+import com.agent.data.tokenmeter.TokenUsageDailyRepository;
 import com.agent.tool.ToolMeta;
 import com.agent.tool.ToolPermission;
 import com.agent.tool.ToolRegistry;
@@ -43,6 +46,16 @@ class McpAdminControllerTest {
 
     @MockBean
     private McpOutboundConnector outbound;
+
+    // W17: Mock OpenApiFilter dependencies
+    @MockBean
+    private ApiKeyRepository apiKeyRepository;
+
+    @MockBean
+    private TenantQuotaRepository tenantQuotaRepository;
+
+    @MockBean
+    private TokenUsageDailyRepository tokenUsageDailyRepository;
 
     @Test
     void tools_returnsRegisteredTools() throws Exception {

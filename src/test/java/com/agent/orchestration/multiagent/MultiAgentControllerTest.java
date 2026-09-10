@@ -1,6 +1,9 @@
 package com.agent.orchestration.multiagent;
 
 import com.agent.data.multiagent.MultiAgentRunRepository;
+import com.agent.data.openplatform.ApiKeyRepository;
+import com.agent.data.openplatform.TenantQuotaRepository;
+import com.agent.data.tokenmeter.TokenUsageDailyRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -36,6 +39,16 @@ class MultiAgentControllerTest {
 
     @MockBean
     private SharedBlackboard blackboard;
+
+    // W17: Mock OpenApiFilter dependencies
+    @MockBean
+    private ApiKeyRepository apiKeyRepository;
+
+    @MockBean
+    private TenantQuotaRepository tenantQuotaRepository;
+
+    @MockBean
+    private TokenUsageDailyRepository tokenUsageDailyRepository;
 
     @Test
     void submit_supervisor_returnsRootRunId() throws Exception {

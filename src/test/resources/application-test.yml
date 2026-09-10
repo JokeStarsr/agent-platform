@@ -1,0 +1,3 @@
+# Test configuration - disable openplatform filter for @WebMvcTest
+openplatform:
+  enabled: false

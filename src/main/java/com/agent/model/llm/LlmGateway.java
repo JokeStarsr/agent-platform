@@ -1,6 +1,5 @@
 package com.agent.model.llm;
 
-import com.agent.tokenmeter.TokenMeterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -16,7 +15,8 @@ import java.util.UUID;
  * <p>统一经本网关访问模型（架构铁律：应用层禁止直连模型）。
  * system 为空时跳过 .system()（Spring AI 1.0 的 Assert.hasText 拒绝空 system 字符串）。
  * ChatClient builder 不可变，链式调用每个方法都返回新 spec。
- * W17：集成 Token 计量（TokenMeterService），记录每次调用的 Token 消耗和费用。</p>
+ * W17：集成 Token 计量（TokenMeter 接口），记录每次调用的 Token 消耗和费用。
+ * 通过依赖反转避免 Model 层直接依赖 App 层。</p>
  */
 @Service
 public class LlmGateway {
@@ -24,15 +24,15 @@ public class LlmGateway {
     private static final Logger log = LoggerFactory.getLogger(LlmGateway.class);
 
     private final ChatModel chatModel;
-    private final TokenMeterService tokenMeterService;
+    private final TokenMeter tokenMeter;
 
     // Token 估算比例（字符数 → Token 数）
     private static final double CHARS_PER_TOKEN_EN = 4.0;   // 英文：4 字符 ≈ 1 Token
     private static final double CHARS_PER_TOKEN_ZH = 1.5;   // 中文：1.5 字符 ≈ 1 Token
 
-    public LlmGateway(ChatModel chatModel, TokenMeterService tokenMeterService) {
+    public LlmGateway(ChatModel chatModel, TokenMeter tokenMeter) {
         this.chatModel = chatModel;
-        this.tokenMeterService = tokenMeterService;
+        this.tokenMeter = tokenMeter;
     }
 
     /** 单轮生成 */
@@ -115,7 +115,7 @@ public class LlmGateway {
             }
 
             // 记录 Token 用量
-            tokenMeterService.record(traceId, tenantId, null, modelName,
+            tokenMeter.record(traceId, tenantId, null, modelName,
                     promptTokens, completionTokens, totalTokens, durationMs);
         } catch (Exception e) {
             // 计量失败不应影响主流程

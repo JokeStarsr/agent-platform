@@ -1,7 +1,8 @@
-package com.agent.tokenmeter;
+package com.agent.app.tokenmeter;
 
 import com.agent.data.tokenmeter.TokenUsageDailyRepository;
 import com.agent.data.tokenmeter.TokenUsageRepository;
+import com.agent.model.llm.TokenMeter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +17,11 @@ import java.util.Map;
 /**
  * L7 数据层：Token 计量服务（W17）
  * <p>记录每次 LLM 调用的 Token 消耗（prompt/completion/total）、费用、耗时。
- * 写入明细表（t_token_usage）+ 更新日聚合表（t_token_usage_daily）。</p>
+ * 写入明细表（t_token_usage）+ 更新日聚合表（t_token_usage_daily）。
+ * 实现 TokenMeter 接口（L6 模型层），通过依赖反转避免 Model 层直接依赖 App 层。</p>
  */
 @Service
-public class TokenMeterService {
+public class TokenMeterService implements TokenMeter {
 
     private static final Logger log = LoggerFactory.getLogger(TokenMeterService.class);
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -67,6 +69,7 @@ public class TokenMeterService {
      * @param totalTokens       总 Token 数
      * @param durationMs        耗时（毫秒）
      */
+    @Override
     public void record(String traceId, String tenantId, String appId, String modelName,
                        int promptTokens, int completionTokens, int totalTokens, long durationMs) {
         try {

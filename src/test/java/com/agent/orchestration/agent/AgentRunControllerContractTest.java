@@ -1,6 +1,9 @@
 package com.agent.orchestration.agent;
 
 import com.agent.common.PageResult;
+import com.agent.data.openplatform.ApiKeyRepository;
+import com.agent.data.openplatform.TenantQuotaRepository;
+import com.agent.data.tokenmeter.TokenUsageDailyRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -35,6 +38,16 @@ class AgentRunControllerContractTest {
 
     @MockBean
     private AgentRuntimeService agentRuntime;
+
+    // W17: Mock OpenApiFilter dependencies
+    @MockBean
+    private ApiKeyRepository apiKeyRepository;
+
+    @MockBean
+    private TenantQuotaRepository tenantQuotaRepository;
+
+    @MockBean
+    private TokenUsageDailyRepository tokenUsageDailyRepository;
 
     private static Map<String, Object> runItem(long runId, String status) {
         Map<String, Object> m = new LinkedHashMap<>();

@@ -1,4 +1,4 @@
-package com.agent.tokenmeter;
+package com.agent.app.tokenmeter;
 
 import com.agent.data.openplatform.TenantQuotaRepository;
 import com.agent.data.openplatform.TenantQuotaRepository.TenantQuota;

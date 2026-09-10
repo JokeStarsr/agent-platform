@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,8 +29,10 @@ import java.util.Optional;
  * L1 接入层：开放平台 API Key 认证过滤器（W17）
  * <p>拦截所有 /api/open/** 请求，验证 X-Api-Key 头，检查租户配额（QPS、Token 配额、预算），
  * 通过后注入 X-Tenant-Id 头转发到后端，拒绝返回 401/403/429。</p>
+ * <p>测试环境可通过配置 openplatform.enabled=false 禁用此过滤器。</p>
  */
 @Component
+@ConditionalOnProperty(name = "openplatform.enabled", havingValue = "true", matchIfMissing = true)
 public class OpenApiFilter implements Filter {
 
     private static final Logger log = LoggerFactory.getLogger(OpenApiFilter.class);

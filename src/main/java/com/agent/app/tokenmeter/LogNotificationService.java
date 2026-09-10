@@ -1,4 +1,4 @@
-package com.agent.tokenmeter;
+package com.agent.app.tokenmeter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
