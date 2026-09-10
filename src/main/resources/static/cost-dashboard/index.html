@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>成本看板 · Agent Platform</title>
+  <link rel="stylesheet" href="/common.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border: 1px solid #e3e8ef; border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 700; color: #2563eb; margin: 8px 0; }
+    .stat-label { font-size: 13px; color: #6b7280; }
+    .stat-change { font-size: 12px; margin-top: 4px; }
+    .stat-change.up { color: #dc2626; }
+    .stat-change.down { color: #16a34a; }
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .chart-card { background: #fff; border: 1px solid #e3e8ef; border-radius: 12px; padding: 16px; }
+    .chart-container { width: 100%; height: 300px; }
+    .alert-list { max-height: 400px; overflow-y: auto; }
+    .alert-item { padding: 12px; border-bottom: 1px solid #e3e8ef; }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-warning { border-left: 4px solid #f59e0b; }
+    .alert-critical { border-left: 4px solid #dc2626; }
+    .alert-type { font-weight: 600; margin-bottom: 4px; }
+    .alert-detail { font-size: 13px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="badge">L7 数据层 · W17</span>
+      <h1>💰 成本看板</h1>
+      <div class="sub"><a href="/">← 返回首页</a> ｜ Token 用量统计 + 费用趋势 + 预算告警</div>
+    </header>
+
+    <div class="alerts" id="alerts"></div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-label">今日 Token 消耗</div>
+        <div class="stat-value" id="todayTokens">-</div>
+        <div class="stat-change" id="tokenChange">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">今日费用</div>
+        <div class="stat-value" id="todayCost">-</div>
+        <div class="stat-change" id="costChange">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">今日调用次数</div>
+        <div class="stat-value" id="todayCalls">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">预算使用率</div>
+        <div class="stat-value" id="budgetUsage">-</div>
+      </div>
+    </div>
+
+    <!-- 趋势图表 -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <h3>📈 Token 消耗趋势（近 7 天）</h3>
+        <div id="tokenTrendChart" class="chart-container"></div>
+      </div>
+      <div class="chart-card">
+        <h3>💵 费用趋势（近 7 天）</h3>
+        <div id="costTrendChart" class="chart-container"></div>
+      </div>
+    </div>
+
+    <!-- 分布图表 -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <h3>📊 应用用量分布</h3>
+        <div id="appUsageChart" class="chart-container"></div>
+      </div>
+      <div class="chart-card">
+        <h3>🤖 模型费用分布</h3>
+        <div id="modelUsageChart" class="chart-container"></div>
+      </div>
+    </div>
+
+    <!-- Top 消耗请求 -->
+    <div class="card">
+      <h3>🔥 Top 10 消耗请求（今日）</h3>
+      <div id="topRequestsContainer">
+        <p style="color:#99a">加载中...</p>
+      </div>
+    </div>
+
+    <!-- 预算告警历史 -->
+    <div class="card">
+      <h3>🚨 预算告警历史</h3>
+      <div id="alertHistoryContainer" class="alert-list">
+        <p style="color:#99a">加载中...</p>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
