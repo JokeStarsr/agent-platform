@@ -278,4 +278,26 @@ public class WorkflowRepository {
     public void markEscalated(long nodeRunId) {
         jdbc.update("UPDATE t_workflow_node_run SET escalated_at = now() WHERE node_run_id = ?", nodeRunId);
     }
+
+    /* ---------- 删除级联（冲刺2）---------- */
+
+    /**
+     * 删除租户所有 Workflow 实例（级联节点记录）
+     */
+    public void deleteByTenant(String tenantId) {
+        // 节点记录级联删除（通过 instance_id）
+        jdbc.update("DELETE FROM t_workflow_node_run WHERE instance_id IN " +
+                "(SELECT instance_id FROM t_workflow_instance WHERE tenant_id = ?)", tenantId);
+        // 实例主记录
+        jdbc.update("DELETE FROM t_workflow_instance WHERE tenant_id = ?", tenantId);
+    }
+
+    /**
+     * 删除指定用户的 Workflow 实例（级联节点记录）
+     */
+    public void deleteByTenantAndUser(String tenantId, String userId) {
+        jdbc.update("DELETE FROM t_workflow_node_run WHERE instance_id IN " +
+                "(SELECT instance_id FROM t_workflow_instance WHERE tenant_id = ? AND user_id = ?)", tenantId, userId);
+        jdbc.update("DELETE FROM t_workflow_instance WHERE tenant_id = ? AND user_id = ?", tenantId, userId);
+    }
 }

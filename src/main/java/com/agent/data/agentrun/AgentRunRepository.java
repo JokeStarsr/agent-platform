@@ -252,4 +252,21 @@ public class AgentRunRepository {
             throw new IllegalStateException("JSON 反序列化失败", e);
         }
     }
+
+    /* ---------- 删除级联（冲刺2）---------- */
+
+    /**
+     * 删除租户所有 Agent 运行记录（级联步骤）
+     */
+    public void deleteByTenant(String tenantId) {
+        // 步骤记录已在父级表中联级删除
+        jdbc.update("DELETE FROM t_agent_run WHERE tenant_id = ?", tenantId);
+    }
+
+    /**
+     * 删除指定用户的 Agent 运行记录（级联步骤）
+     */
+    public void deleteByTenantAndUser(String tenantId, String userId) {
+        jdbc.update("DELETE FROM t_agent_run WHERE tenant_id = ? AND user_id = ?", tenantId, userId);
+    }
 }

@@ -115,4 +115,11 @@ public class TokenUsageRepository {
         java.sql.Timestamp end = java.sql.Timestamp.valueOf(endDate.plusDays(1).atStartOfDay());
         return jdbc.query(sql, ROW, start, end);
     }
+
+    /**
+     * 删除租户所有 Token 用量记录（冲刺2）。
+     */
+    public void deleteByTenant(String tenantId) {
+        jdbc.update("DELETE FROM t_token_usage WHERE tenant_id = ?", tenantId);
+    }
 }

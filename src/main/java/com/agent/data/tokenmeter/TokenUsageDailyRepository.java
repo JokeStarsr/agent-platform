@@ -179,4 +179,11 @@ public class TokenUsageDailyRepository {
         List<TokenUsageDaily> results = jdbc.query(sql, ROW, tenantId, java.sql.Date.valueOf(date));
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
+
+    /**
+     * 删除租户所有 Token 日用量记录（冲刺2）。
+     */
+    public void deleteByTenant(String tenantId) {
+        jdbc.update("DELETE FROM t_token_usage_daily WHERE tenant_id = ?", tenantId);
+    }
 }
