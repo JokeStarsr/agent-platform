@@ -43,4 +43,13 @@ public class RagCollectionRepository {
             return new CollectionStat("vector_store", tenantId, chunkCount, docCount, lastUpdate);
         }, tenantId);
     }
+
+    /**
+     * 清理超期的 RAG 知识库（冲刺3）
+     */
+    public int deleteOldCollections(int retentionDays) {
+        // 假设 RAG collection 表有 indexed_at 字段记录索引时间
+        String sql = "DELETE FROM t_rag_collection WHERE indexed_at < now() - interval '" + retentionDays + " days'";
+        return jdbc.update(sql);
+    }
 }

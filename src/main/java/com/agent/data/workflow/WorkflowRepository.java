@@ -300,4 +300,12 @@ public class WorkflowRepository {
                 "(SELECT instance_id FROM t_workflow_instance WHERE tenant_id = ? AND user_id = ?)", tenantId, userId);
         jdbc.update("DELETE FROM t_workflow_instance WHERE tenant_id = ? AND user_id = ?", tenantId, userId);
     }
+
+    /**
+     * 清理超期的 Token 用量记录（冲刺3）
+     */
+    public int deleteOldTokenRecords(int retentionDays) {
+        // TODO t_workflow_instance 无 token 相关字段，此方法预留接口
+        return 0;
+    }
 }

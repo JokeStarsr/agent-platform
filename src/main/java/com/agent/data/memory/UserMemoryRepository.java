@@ -94,4 +94,12 @@ public class UserMemoryRepository {
     private static int effectiveTopK(Integer topK) {
         return topK == null || topK <= 0 ? 5 : topK;
     }
+
+    /**
+     * 清理超期的记忆记录（冲刺3）
+     */
+    public int deleteOldRecords(int retentionDays) {
+        String sql = "DELETE FROM t_user_memory WHERE created_at < now() - interval '" + retentionDays + " days'";
+        return jdbc.update(sql);
+    }
 }
