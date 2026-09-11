@@ -43,6 +43,9 @@ public class GeneralAssistantService {
         this.llm = llm;
     }
 
+    /** 会话状态记录 */
+    private record SessionState(String sessionId, String tenantId, String skillName, String status, String previewId) {}
+
     /** 提问入口：返回 SSE 事件流或直接结果（v1 简化：同步返回，SSE 留演进） */
     public Map<String, Object> ask(String tenantId, String message, String sessionId, String skillHint) {
         String sid = sessionId != null ? sessionId : UUID.randomUUID().toString();
@@ -75,14 +78,35 @@ public class GeneralAssistantService {
         }
 
         try {
-            String result = executor.execute(skillRow, message);
+            // 3. 执行前检查是否为写操作（需预览）
+            var previewOpt = previewGen.generatePreview(tenantId, "GENERAL_ASSISTANT", skillName, Map.of("message", message));
 
-            // 4. 返回结果
-            return Map.of(
-                    "sessionId", sid,
-                    "status", "COMPLETED",
-                    "skill", skillName,
-                    "answer", result);
+            if (previewOpt.isPresent()) {
+                // 写操作：生成预览，等待用户确认
+                var preview = previewOpt.get();
+                sessions.put(sid, new SessionState(sid, tenantId, skillName, "PENDING_PREVIEW", preview.previewId()));
+
+                return Map.of(
+                        "sessionId", sid,
+                        "status", "PREVIEW_REQUIRED",
+                        "preview", Map.of(
+                                "previewId", preview.previewId(),
+                                "tool", preview.tool(),
+                                "params", preview.params(),
+                                "summary", preview.summary(),
+                                "impact", preview.impact()
+                        ));
+            } else {
+                // 读操作：直接执行
+                String result = executor.execute(skillRow, message);
+
+                // 4. 返回结果
+                return Map.of(
+                        "sessionId", sid,
+                        "status", "COMPLETED",
+                        "skill", skillName,
+                        "answer", result);
+            }
         } catch (Exception e) {
             log.error("助手执行失败: {}", e.getMessage());
             return Map.of("sessionId", sid, "status", "FAILED", "answer", "执行失败：" + e.getMessage());
@@ -97,6 +121,49 @@ public class GeneralAssistantService {
         }
 
         boolean confirmed = previewGen.confirmPreview(previewId, approved);
+
+        if (confirmed) {
+            // 确认后，继续执行原技能
+            var skillOpt = skillHub.listAvailable().stream()
+                    .filter(s -> state.skillName().equals(s.get("name")))
+                    .findFirst();
+            if (skillOpt.isEmpty()) {
+                return Map.of("sessionId", sessionId, "status", "ERROR", "answer", "技能不可用：" + state.skillName());
+            }
+
+            var skillRow = skillHub.findByName(state.skillName()).orElse(null);
+            if (skillRow == null) {
+                return Map.of("sessionId", sessionId, "status", "ERROR", "answer", "技能数据缺失：" + state.skillName());
+            }
+
+            try {
+                String result = executor.execute(skillRow, "继续执行写操作");
+                sessions.remove(sessionId); // 清理会话
+                return Map.of(
+                        "sessionId", sessionId,
+                        "status", "COMPLETED",
+                        "skill", state.skillName(),
+                        "answer", result);
+            } catch (Exception e) {
+                log.error("助手执行失败: {}", e.getMessage());
+                sessions.remove(sessionId);
+                return Map.of("sessionId", sessionId, "status", "FAILED", "answer", "执行失败：" + e.getMessage());
+            }
+        } else {
+            // 拒绝，返回取消
+            sessions.remove(sessionId);
+            return Map.of(
+                    "sessionId", sessionId,
+                    "status", "CANCELLED",
+                    "answer", "用户取消了写操作"
+            );
+        }
+    }
+
+    /** 获取预览详情 */
+    public java.util.Optional<OperationPreviewGenerator.PreviewData> getPreview(String previewId) {
+        return previewGen.getPreview(previewId);
+    }
         if (!confirmed) {
             return Map.of("status", "REJECTED", "message", "用户拒绝或预览已过期");
         }
