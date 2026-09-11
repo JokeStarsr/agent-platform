@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 租户头透传与默认值、异常统一包装。
  */
 @WebMvcTest(RagController.class)
+@org.springframework.test.context.TestPropertySource(properties = "app.security.injection-filter=false")
 class RagControllerContractTest {
 
     @Autowired

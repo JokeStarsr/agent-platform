@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * McpAdminController HTTP 契约测试（docs/design/architecture/20260904-mcp-gateway.md §7.2）
  */
 @WebMvcTest(McpAdminController.class)
+@org.springframework.test.context.TestPropertySource(properties = "app.security.injection-filter=false")
 class McpAdminControllerTest {
 
     @Autowired

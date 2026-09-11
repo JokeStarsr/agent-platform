@@ -24,9 +24,12 @@ public class AuditLogAspect {
     private final AuditService auditService;
     // 反射式读 Result.data 审计字段：common 是跨层基础设施，不 import 具体业务类型（七层依赖只允许向下）
     private final ObjectMapper dataMapper = new ObjectMapper();
+    // PII 脱敏端口（capability.security.PiiMasker 实现），按需注入实现日志自动掩码
+    private final PiiMaskPort piiMaskPort;
 
-    public AuditLogAspect(AuditService auditService) {
+    public AuditLogAspect(AuditService auditService, org.springframework.beans.factory.ObjectProvider<PiiMaskPort> piiMaskPortProvider) {
         this.auditService = auditService;
+        this.piiMaskPort = piiMaskPortProvider.getIfAvailable();
     }
 
     @Around("execution(* com.agent.capability.RagService.search(..))")
@@ -38,13 +41,14 @@ public class AuditLogAspect {
         String query = (String) args[0];
         int topK = args[1] == null ? 5 : (Integer) args[1];
         String tenantId = (String) args[2];
+        String safeQuery = maskPii(query);
 
         if (result instanceof Result<?> r && r.getData() != null) {
             Map<String, Object> data = dataMapper.convertValue(r.getData(), Map.class);
             List<?> sourceChunks = asList(data.get("sourceChunks"));
             List<?> citations = asList(data.get("citations"));
             Object answer = data.get("answer");
-            auditService.log(tenantId, query, topK,
+            auditService.log(tenantId, safeQuery, topK,
                     sourceChunks == null ? 0 : sourceChunks.size(),
                     extractSources(citations), latencyMs, 0,
                     Boolean.TRUE.equals(data.get("needsHandoff")),
@@ -52,7 +56,7 @@ public class AuditLogAspect {
                     data.get("confidenceScore") instanceof Number n ? n.doubleValue() : 0.0,
                     answer == null ? 0 : String.valueOf(answer).length());
         } else {
-            auditService.logRequest(tenantId, query, topK);
+            auditService.logRequest(tenantId, safeQuery, topK);
         }
         return result;
     }
@@ -68,8 +72,20 @@ public class AuditLogAspect {
         String query = (String) args[0];
         int topK = args[1] == null ? 5 : (Integer) args[1];
         String tenantId = (String) args[2];
-        auditService.logRequest(tenantId, query, topK);
+        auditService.logRequest(tenantId, maskPii(query), topK);
         return pjp.proceed();
+    }
+
+    /** PII 脱敏（无实现时原样返回） */
+    private String maskPii(String text) {
+        if (piiMaskPort != null) {
+            try {
+                return piiMaskPort.maskSensitive(text);
+            } catch (Exception e) {
+                // 脱敏失败不阻断主流程
+            }
+        }
+        return text;
     }
 
     /** 引用列表【1】: 文件名 → 提取文件名 */

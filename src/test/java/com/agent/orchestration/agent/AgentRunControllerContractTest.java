@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 纯 MockMvc，不依赖真实 DB/LLM，验证：GET /api/agent/runs 分页结构、status 筛选透传、租户头缺省。
  */
 @WebMvcTest(AgentRunController.class)
+@org.springframework.test.context.TestPropertySource(properties = "app.security.injection-filter=false")
 class AgentRunControllerContractTest {
 
     @Autowired

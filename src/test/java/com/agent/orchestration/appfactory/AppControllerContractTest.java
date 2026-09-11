@@ -34,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 纯 MockMvc，验证：列表分页、详情、创建校验、重复 409、启停状态流、租户头缺省。
  */
 @WebMvcTest(AppController.class)
+@org.springframework.test.context.TestPropertySource(properties = "app.security.injection-filter=false")
 class AppControllerContractTest {
 
     @Autowired

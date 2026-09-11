@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * MultiAgentController 契约测试（docs/design/architecture/20260905-multi-agent.md §8）
  */
 @WebMvcTest(MultiAgentController.class)
+@org.springframework.test.context.TestPropertySource(properties = "app.security.injection-filter=false")
 class MultiAgentControllerTest {
 
     @Autowired

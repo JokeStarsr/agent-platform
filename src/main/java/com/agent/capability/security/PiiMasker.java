@@ -1,5 +1,6 @@
 package com.agent.capability.security;
 
+import com.agent.common.PiiMaskPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,7 @@ import java.util.regex.Pattern;
  * 防护面：请求日志自动掩码、LLM 输出内容过滤、审计日志脱敏。</p>
  */
 @Service
-public class PiiMasker {
+public class PiiMasker implements PiiMaskPort {
 
     private static final Logger log = LoggerFactory.getLogger(PiiMasker.class);
 
@@ -87,8 +88,17 @@ public class PiiMasker {
     }
 
     /**
-     * 判断文本是否包含 PII。
+     * 接口实现：脱敏（供 AuditLogAspect 日志自动掩码）。
      */
+    @Override
+    public String maskSensitive(String text) {
+        return mask(text).maskedText();
+    }
+
+    /**
+     * 判断文本是否包含 PII（接口实现）。
+     */
+    @Override
     public boolean containsPii(String text) {
         if (text == null || text.isBlank()) {
             return false;

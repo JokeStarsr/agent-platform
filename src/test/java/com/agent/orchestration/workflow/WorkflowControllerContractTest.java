@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 纯 MockMvc，验证：GET /api/workflow/instances 分页结构、status 筛选透传、租户头缺省、/flows 烟测。
  */
 @WebMvcTest(WorkflowController.class)
+@org.springframework.test.context.TestPropertySource(properties = "app.security.injection-filter=false")
 class WorkflowControllerContractTest {
 
     @Autowired

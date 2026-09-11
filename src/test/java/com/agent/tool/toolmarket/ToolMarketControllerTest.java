@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * ToolMarketController HTTP 契约测试（docs/design/architecture/20260905-tool-marketplace.md §7.1）
  */
 @WebMvcTest(ToolMarketController.class)
+@org.springframework.test.context.TestPropertySource(properties = "app.security.injection-filter=false")
 class ToolMarketControllerTest {
 
     @Autowired
