@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,7 +125,10 @@ public class ScheduledCleanupService {
 /**
  * 清理历史记录（后续可扩展表存储）
  */
+@Component
 class ScheduledTaskHistory {
+    private static final Logger log = LoggerFactory.getLogger(ScheduledTaskHistory.class);
+
     // W23 清理历史表，W22 先留接口
     public void recordTask(String taskName, Instant startTime, int deletedRecords, String errorMessage) {
         // TODO W23: t_cleanup_history 记录每次执行状态

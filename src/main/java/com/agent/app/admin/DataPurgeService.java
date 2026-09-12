@@ -2,7 +2,6 @@ package com.agent.app.admin;
 
 import com.agent.capability.dataagent.ResultCache;
 import com.agent.data.agentrun.AgentRunRepository;
-import com.agent.data.agentrun.AgentRunRepository.AgentRunRow;
 import com.agent.data.tokenmeter.TokenUsageDailyRepository;
 import com.agent.data.tokenmeter.TokenUsageRepository;
 import com.agent.data.workflow.WorkflowRepository;
@@ -93,21 +92,14 @@ public class DataPurgeService {
     }
 
     /**
-     * 清理 Redis 会话（短时记忆，按 key 前缀删除）
+     * 清理 Redis 会话（短时记忆）占位：ResultCache 仅缓存 NL2SQL 结果（key 为哈希），
+     * Redis 会话清理由基础设施 RedisTemplate 按 key 前缀删除（W23 接入 spring-data-redis 后实现）。
      */
     private void purgeSessions(String tenantId) {
         purgeSessions(tenantId, null);
     }
 
     private void purgeSessions(String tenantId, String userId) {
-        if (userId != null) {
-            // 删除指定用户的会话 key
-            cache.evict("session:" + tenantId + ":" + userId + ":*");
-            cache.evict("memory:" + tenantId + ":" + userId + ":*");
-        } else {
-            // 删除租户所有会话
-            cache.evict("session:" + tenantId + ":*");
-            cache.evict("memory:" + tenantId + ":*");
-        }
+        // TODO(W23)：接入 RedisTemplate，按 "session:{tenant}:{user}:" / "memory:{tenant}:{user}:" 前缀删除
     }
 }

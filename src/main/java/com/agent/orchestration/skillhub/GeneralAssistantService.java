@@ -164,20 +164,6 @@ public class GeneralAssistantService {
     public java.util.Optional<OperationPreviewGenerator.PreviewData> getPreview(String previewId) {
         return previewGen.getPreview(previewId);
     }
-        if (!confirmed) {
-            return Map.of("status", "REJECTED", "message", "用户拒绝或预览已过期");
-        }
-
-        // 预览确认后，实际执行写操作（这里简化：预览数据里已含工具和参数）
-        var previewOpt = previewGen.getPreview(previewId);
-        if (previewOpt.isEmpty()) {
-            return Map.of("status", "ERROR", "message", "预览数据丢失");
-        }
-
-        // 实际执行（复用 ToolEngine）
-        // v1 简化：返回成功
-        return Map.of("status", "EXECUTED", "message", "写操作已执行");
-    }
 
     /** 获取可用技能列表 */
     public List<Map<String, Object>> skills() {
@@ -219,21 +205,6 @@ public class GeneralAssistantService {
         } catch (Exception e) {
             log.warn("LLM 路由失败，回退首个技能: {}", e.getMessage());
             return (String) skills.get(0).get("name");
-        }
-    }
-
-    /** 会话状态（用于跨轮对话、预览确认上下文） */
-    private static class SessionState {
-        final String sessionId;
-        final String tenantId;
-        final Instant createdAt;
-        String currentSkill;
-        String pendingPreviewId;
-
-        SessionState(String sessionId, String tenantId) {
-            this.sessionId = sessionId;
-            this.tenantId = tenantId;
-            this.createdAt = Instant.now();
         }
     }
 }

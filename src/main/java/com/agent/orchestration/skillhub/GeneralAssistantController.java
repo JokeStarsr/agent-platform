@@ -75,8 +75,8 @@ public class GeneralAssistantController {
         Map<String, Object> detail = Map.of(
                 "previewId", preview.previewId(),
                 "tenantId", tenantId,
-                "tool", preview.tool(),
-                "params", preview.params(),
+                "tool", preview.toolName(),
+                "params", preview.args(),
                 "summary", preview.summary(),
                 "impact", preview.impact()
         );

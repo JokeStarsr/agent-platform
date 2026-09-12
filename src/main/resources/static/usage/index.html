@@ -18,6 +18,7 @@
     .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
     .tag.w14 { background: #7c3aed22; color: #7c3aed; }
     .tag.new { background: #16a34a22; color: #16a34a; }
+    .tag.sec { background: #dc262622; color: #dc2626; }
     .callout { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px;
       font-size: 13px; margin: 12px 0; }
     .toc a { color: #2b5fd9; text-decoration: none; font-size: 13px; display: block; padding: 2px 0; }
@@ -28,154 +29,187 @@
 <body>
   <div class="wrap">
     <header>
-      <span class="badge">企业级智能体平台 · 使用说明书</span>
+      <span class="badge">企业级智能体平台 · 完整操作说明书 v2.0（已上线）</span>
       <h1>📖 Agent Platform 使用说明书</h1>
-      <div class="sub">七层架构 · Spring Boot 3.4.5 · JDK17 · 端口 8082</div>
+      <div class="sub">七层架构 · Spring Boot 3.4.5 · JDK17 · 端口 8082 · 227 测试全绿</div>
     </header>
 
     <div class="card toc">
       <h3>目录</h3>
-      <a href="#quick">1. 快速上手：三种核心入口</a>
-      <a href="#matrix">2. 核心能力矩阵（按页面）</a>
+      <a href="#quick">1. 快速上手：三大核心入口</a>
+      <a href="#matrix">2. 全部页面能力矩阵</a>
       <a href="#contract">3. 统一调用约定</a>
-      <a href="#scenarios">4. 典型端到端演示流</a>
-      <a href="#assets">5. 内置现成资产</a>
-      <a href="#w14">6. W14 新增：Skill Hub + 通用助手</a>
-      <a href="#faq">7. 常见问题 FAQ</a>
+      <a href="#scenarios">4. 端到端演示流</a>
+      <a href="#data-agent">5. Data Agent 数据查询</a>
+      <a href="#skill-hub">6. Skill Hub + 通用助手 + 写操作预览</a>
+      <a href="#open-platform">7. 开放平台（API Key）</a>
+      <a href="#security">8. 安全能力</a>
+      <a href="#ops">9. 运维管理</a>
+      <a href="#faq">10. 常见问题 FAQ</a>
     </div>
 
-    <h2 id="quick">1. 快速上手：三种核心入口</h2>
+    <h2 id="quick">1. 快速上手：三大核心入口</h2>
     <div class="card">
       <table>
         <tr><th>入口</th><th>页面</th><th>适用场景</th></tr>
         <tr><td><b>💬 客服对话</b></td><td><code>/chat/</code></td>
-            <td>实时 RAG 检索 + SSE 打字机流式回复 + 引用溯源 + 转人工</td></tr>
+            <td>实时 RAG 检索 + SSE 流式回复 + 引用溯源 + 转人工</td></tr>
         <tr><td><b>🤖 Agent 运行监控</b></td><td><code>/agent/</code></td>
             <td>单 Agent ReAct 循环：提交任务 → 看步骤/Token/耗时/黑板</td></tr>
         <tr><td><b>🔁 Workflow 管理</b></td><td><code>/workflow/</code></td>
             <td>确定性 DAG：商旅主流程 / 条件分支 / 人工审批 / 补偿回滚</td></tr>
       </table>
-      <div class="callout">💡 <b>最简单体验</b>：打开 <code>/chat/</code> → 输入"帮我查北京出差住宿标准" → 看 SSE 流式回答 + 右侧引用面板。</div>
+      <div class="callout">💡 <b>最简体验</b>：打开 <code>/chat/</code> → 输入"帮我查北京出差住宿标准" → 看 SSE 流式回答 + 右侧引用面板。</div>
     </div>
 
-    <h2 id="matrix">2. 核心能力矩阵（按页面）</h2>
+    <h2 id="matrix">2. 全部页面能力矩阵</h2>
     <div class="card">
       <table>
-        <tr><th>页面</th><th>能力</th><th>怎么玩（关键操作）</th></tr>
+        <tr><th>页面</th><th>能力</th><th>关键操作</th></tr>
         <tr><td><code>/chat/</code></td><td>RAG 客服对话</td>
-            <td>1. 发消息 → 2. 看流式回答 + 引用卡片 → 3. 点"转人工"</td></tr>
+            <td>发消息 → 流式回答 + 引用 → 转人工</td></tr>
         <tr><td><code>/agent/</code></td><td>Agent 运行监控</td>
-            <td>1. 新建运行（选应用 + 任务描述）→ 2. 实时看 Steps/Token/工具调用 → 3. 点某步看输入输出</td></tr>
+            <td>新建运行（选应用+任务）→ 实时 Steps/Token/工具调用 → 点步看输入输出</td></tr>
         <tr><td><code>/workflow/</code></td><td>Workflow 引擎</td>
-            <td>1. 选定义 → 2. 启动实例 → 3. 审批节点点通过/拒绝 → 4. 看补偿回滚</td></tr>
+            <td>选定义 → 启动实例 → 审批通过/拒绝 → 补偿回滚</td></tr>
         <tr><td><code>/apps/</code></td><td>应用工厂</td>
-            <td>1. 看 8 项配置 → 2. 新建/克隆应用 → 3. 启用后 Agent/Workflow 可用</td></tr>
+            <td>看 8 项配置 → 新建/克隆 → 启用后 Agent/Workflow 可用</td></tr>
         <tr><td><code>/tool-market/</code></td><td>工具市场</td>
-            <td>1. 浏览工具 → 2. 注册新工具填表 → 3. Preview 试调 → 4. 发布 → 5. 下架/新版本</td></tr>
+            <td>浏览/注册新工具 → Preview 试调 → 发布 → 下架/新版本</td></tr>
         <tr><td><code>/mcp-gateway/</code></td><td>MCP 双向网关</td>
-            <td>1. 看入站工具列表 → 2. 授权表开权限 → 3. 配置出站 MCP Server → 4. 看连接状态</td></tr>
+            <td>入站工具列表 / 授权表 / 出站 MCP Server 连接状态</td></tr>
         <tr><td><code>/multi-agent/</code></td><td>多智能体编排</td>
-            <td>1. Supervisor：任务分解→专家并行→汇总 → 2. Pipeline：阶段串行/并行→黑板</td></tr>
+            <td>Supervisor：分解→专家并行→汇总；Pipeline：串行/并行→黑板</td></tr>
         <tr><td><code>/memory/</code></td><td>三级记忆</td>
-            <td>短期（会话）/长期（画像）/组织级（共享知识）+ 预算化组装</td></tr>
+            <td>短期（会话）/长期（画像）/组织级 + 预算化组装</td></tr>
         <tr><td><code>/rag/</code></td><td>RAG 检索</td>
-            <td>输入查询 → 向量近邻 Top-K + 置信度门控 + 引用片段</td></tr>
+            <td>输入查询 → 向量近邻 + 置信度门控 + 引用片段</td></tr>
         <tr><td><code>/collections/</code></td><td>知识库</td>
-            <td>4 个 Collection → 文档上传/切块/索引/删除</td></tr>
+            <td>4 个 Collection → 上传/切块/索引/删除</td></tr>
+        <tr><td><code>/skill-hub/</code></td><td>技能中心 <span class="tag w14">W14</span></td>
+            <td>安装 manifest → 发布（测试用例全绿）→ 新版本/卸载</td></tr>
+        <tr><td><code>/assistant/</code></td><td>通用 AI 助手 <span class="tag w14">W14</span></td>
+            <td>意图路由 → 技能执行 → 写操作先预览确认</td></tr>
+        <tr><td><code>/data-agent/</code></td><td>数据查询 <span class="tag new">W15/16</span></td>
+            <td>自然语言 → NL2SQL → 图表 → 数值复算校验 → 报告导出</td></tr>
+        <tr><td><code>/cost-dashboard/</code></td><td>成本看板 <span class="tag new">W17</span></td>
+            <td>Token/费用统计 → 趋势图 → 预算告警</td></tr>
+        <tr><td><code>/usage/</code></td><td>使用说明书（本页）</td>
+            <td>全部模块操作方法</td></tr>
       </table>
     </div>
 
-    <h2 id="contract">3. 统一调用约定（必读）</h2>
+    <h2 id="contract">3. 统一调用约定</h2>
     <div class="card">
       <table>
         <tr><th>项</th><th>规则</th></tr>
-        <tr><td><b>租户隔离</b></td><td>所有 API 必须带 <code>X-Tenant-Id</code> 头（如 <code>default</code>、<code>tenant_001</code>）</td></tr>
-        <tr><td><b>统一响应</b></td><td><code>Result&lt;T&gt;</code>：<code>{code:0,data:...,msg:""}</code>；非 0 = 业务异常</td></tr>
-        <tr><td><b>幂等键</b></td><td>所有写操作（工具调用/发布/下单）需 <code>Idempotency-Key</code> 头</td></tr>
-        <tr><td><b>Trace 链路</b></td><td>响应头自带 <code>X-Trace-Id</code>，日志 MDC 自动关联</td></tr>
-        <tr><td><b>SSE 事件流</b></td><td><code>/chat/ask</code>、<code>/api/agent/runs/{id}/stream</code>、<code>/api/multi-agent/runs/{id}/stream</code></td></tr>
+        <tr><td><b>租户隔离</b></td><td>所有 API 必须带 <code>X-Tenant-Id</code> 头（如 <code>default</code>）</td></tr>
+        <tr><td><b>统一响应</b></td><td><code>Result&lt;T&gt;</code>：<code>{code:0,data,...}</code>；非 0 = 业务异常</td></tr>
+        <tr><td><b>幂等键</b></td><td>写操作（工具调用/发布/下单）需 <code>Idempotency-Key</code> 头</td></tr>
+        <tr><td><b>Trace 链路</b></td><td>响应头 <code>X-Trace-Id</code>，日志 MDC 自动关联</td></tr>
+        <tr><td><b>注入防护</b></td><td>POST 请求体自动扫描 Prompt 注入，命中返 403 <span class="tag sec">安全</span></td></tr>
       </table>
     </div>
 
-    <h2 id="scenarios">4. 典型端到端演示流（按业务场景）</h2>
+    <h2 id="scenarios">4. 端到端演示流</h2>
 
     <h3>场景 A：智能客服（RAG + Agent + 转人工）</h3>
     <div class="card">
-      <div class="step"><div class="step-num">1</div><div>打开 <code>/chat/</code>，问："公司差旅政策里北京住宿上限多少？" → 命中 policy 集合 → 流式回答 + 引用片段</div></div>
-      <div class="step"><div class="step-num">2</div><div>问："帮我订下周二去北京的机票" → 触发 AgentRuntime：policy_query → compare_flight → book_order（需人工审批）</div></div>
+      <div class="step"><div class="step-num">1</div><div><code>/chat/</code> 问"差旅政策里北京住宿上限" → 流式回答 + 引用片段</div></div>
+      <div class="step"><div class="step-num">2</div><div>问"帮我订下周二去北京的机票" → policy_query → compare_flight → book_order（写操作）</div></div>
       <div class="step"><div class="step-num">3</div><div>审批页点"通过" → 真正下单 → 返回订单号</div></div>
     </div>
 
-    <h3>场景 B：商旅全流程</h3>
+    <h3>场景 B：商旅全流程（Workflow）</h3>
     <div class="card">
       <div class="step"><div class="step-num">1</div><div><code>/workflow/</code> 选 <code>travel_main</code> 启动</div></div>
-      <div class="step"><div class="step-num">2</div><div>节点：policy_check → compare_flight → compare_hotel → book_order(WAITING_APPROVAL)</div></div>
+      <div class="step"><div class="step-num">2</div><div>policy_check → compare_flight → compare_hotel → book_order(WAITING_APPROVAL)</div></div>
       <div class="step"><div class="step-num">3</div><div>审批人点"通过" → pay_order → notify_user → COMPLETED</div></div>
     </div>
 
     <h3>场景 C：多智能体协作</h3>
     <div class="card">
-      <div class="step"><div class="step-num">1</div><div><code>/multi-agent/</code> 新建 Supervisor 任务："帮我规划并预订一次上海出差（住3晚）"</div></div>
-      <div class="step"><div class="step-num">2</div><div>看 Planner 分解：sv_policy(查政策) → sv_compare(比价) → sv_final(汇总)</div></div>
-      <div class="step"><div class="step-num">3</div><div>3 专家并行跑 → 黑板写入中间结果 → Final 拼接 → 总 Token 受预算护栏</div></div>
+      <div class="step"><div class="step-num">1</div><div><code>/multi-agent/</code> 新建 Supervisor："帮我规划并预订一次上海出差（住3晚）"</div></div>
+      <div class="step"><div class="step-num">2</div><div>Planner 分解：sv_policy → sv_compare → sv_final（专家并行跑）</div></div>
+      <div class="step"><div class="step-num">3</div><div>黑板写中间结果 → Final 拼接 → 总 Token 受预算护栏</div></div>
     </div>
 
-    <h3>场景 D：自助上架新工具</h3>
+    <h2 id="data-agent">5. Data Agent 数据查询 <span class="tag new">W15/16</span></h2>
     <div class="card">
-      <div class="step"><div class="step-num">1</div><div><code>/tool-market/</code> 点"注册新工具"，填 toolName=query_weather, category=data, permission=READ, parameters(JSON Schema), testcases≥1条</div></div>
-      <div class="step"><div class="step-num">2</div><div>点 Preview 试调 → 点 发布 → 自动授权给 default 租户</div></div>
-      <div class="step"><div class="step-num">3</div><div>立刻可在 Agent/Workflow/MCP 中调用</div></div>
+      <div class="step"><div class="step-num">1</div><div>打开 <code>/data-agent/</code>，输入"上月销售额最高的 3 个产品"</div></div>
+      <div class="step"><div class="step-num">2</div><div>NL2SQL 生成 SQL → SqlSanitizer 白名单 → 只读执行</div></div>
+      <div class="step"><div class="step-num">3</div><div>自动生成图表（折线/柱状/饼图/KPI）→ 结论复算校验通过标记</div></div>
+      <div class="step"><div class="step-num">4</div><div>点"导出 Markdown/HTML"获取分析报告</div></div>
+      <div class="callout">🔍 <b>高频同问优化</b>：相同问题命中结果缓存（<code>GET /api/data-agent/cache/stats</code> 看命中率）。数据句过期自动刷新。</div>
     </div>
 
-    <h2 id="assets">5. 内置现成资产（开箱即用）</h2>
+    <h2 id="skill-hub">6. Skill Hub + 通用助手 + 写操作预览 <span class="tag w14">W14</span></h2>
     <div class="card">
-      <table>
-        <tr><th>类型</th><th>名称</th><th>说明</th></tr>
-        <tr><td><b>应用</b></td><td><code>travel_agent</code> / <code>travel_main</code></td><td>单 Agent / Workflow 商旅主流程</td></tr>
-        <tr><td><b>工具</b></td><td><code>policy_query</code> <code>compare_flight</code> <code>compare_hotel</code> <code>book_order</code> <code>pay_order</code> <code>cancel_order</code> <code>notify_user</code> 等 11 个</td><td>内置商旅/客服工具（BUILTIN）</td></tr>
-        <tr><td><b>自注册工具</b></td><td><code>calendar_create_event</code> <code>report_daily_summary</code> <code>email_notify</code></td><td>演示"注册→发布→可调用"闭环</td></tr>
-        <tr><td><b>知识库</b></td><td><code>tc_policy_v3</code> <code>tc_payment_v1</code> <code>tc_member_v1</code> <code>tc_ops_v1</code></td><td>4 个 Collection，已切块索引</td></tr>
-        <tr><td><b>多智能体专家</b></td><td><code>sv_policy</code> <code>sv_compare</code> <code>sv_final</code> <code>sv_summarize</code> <code>sv_translate</code></td><td>5 个内置 mock 专家（v1 确定性输出）</td></tr>
-      </table>
-    </div>
+      <h3>Skill Hub（技能中心）</h3>
+      <div class="step"><div class="step-num">1</div><div><code>/skill-hub/</code> 看到首发 5 技能（trip_advisor/data_query/meeting_notes/email_draft/faq_answer）</div></div>
+      <div class="step"><div class="step-num">2</div><div>点"安装新技能"粘贴 manifest JSON → 校验通过 → DRAFT</div></div>
+      <div class="step"><div class="step-num">3</div><div>点"发布" → 测试用例全绿才 PUBLISHED（门禁）</div></div>
 
-    <h2 id="w14">6. W14 新增：Skill Hub + 通用助手 <span class="tag w14">W14</span> <span class="tag new">NEW</span></h2>
-
-    <h3>Skill Hub（技能中心）<code>/skill-hub/</code></h3>
-    <div class="card">
-      <p>技能 = 一组 Prompt + 工具 + 知识包 + 测试用例的能力组合包，可安装/版本化/启停/发布门禁。</p>
-      <div class="step"><div class="step-num">1</div><div>打开 <code>/skill-hub/</code> → 看到首发 5 技能列表（trip_advisor / data_query / meeting_notes / email_draft / faq_answer）</div></div>
-      <div class="step"><div class="step-num">2</div><div>点"安装新技能" → 粘贴 manifest JSON → 校验通过 → 进 DRAFT</div></div>
-      <div class="step"><div class="step-num">3</div><div>点"发布" → 自动跑测试用例 → <b>全绿才 PUBLISHED</b>（门禁）→ 立即可用</div></div>
-      <div class="step"><div class="step-num">4</div><div>点"新版本"发新版 / "卸载"下架</div></div>
-    </div>
-
-    <h3>通用 AI 助手 <code>/assistant/</code> <span class="tag new">NEW</span></h3>
-    <div class="card">
-      <p>用户一句话 → 意图路由选技能 → 执行（复用 Agent/多智能体）→ <b>写操作先 diff 预览确认</b> → 返回结果。</p>
-      <div class="step"><div class="step-num">1</div><div>打开 <code>/assistant/</code>，输入"帮我规划一次北京出差" → 路由到 <code>trip_advisor</code></div></div>
-      <div class="step"><div class="step-num">2</div><div>触发 multi-agent：政策→比价→方案</div></div>
-      <div class="step"><div class="step-num">3</div><div>若触发写操作（如 book_order）→ 弹出<b>变更预览卡片</b>（将要做什么/影响范围）→ 你点"确认"才真正执行，点"拒绝"则不执行</div></div>
+      <h3>通用 AI 助手 + 写操作预览 <span class="tag sec">P3 硬闸门</span></h3>
+      <div class="step"><div class="step-num">1</div><div><code>/assistant/</code> 输入"帮我规划一次北京出差（住3晚）" → 路由到 trip_advisor</div></div>
+      <div class="step"><div class="step-num">2</div><div>触发多智能体：政策→比价→方案；若是写操作（book_order）→ 弹出<b>变更预览卡片</b></div></div>
+      <div class="step"><div class="step-num">3</div><div>预览卡片显示"将执行什么/影响范围" → 点"确认"才执行，点"拒绝"不执行</div></div>
       <div class="callout">🔒 <b>P3 硬闸门</b>：任何写操作无预览确认<b>不执行</b>，确认率 100% 强制。</div>
     </div>
 
-    <h2 id="faq">7. 常见问题 FAQ</h2>
+    <h2 id="open-platform">7. 开放平台（API Key）<span class="tag new">W17</span></h2>
+    <div class="card">
+      <div class="step"><div class="step-num">1</div><div><b>创建 Key</b>：<code>POST /api/open/keys</code>（携带 X-Tenant-Id）→ 返回明文仅一次</div></div>
+      <div class="step"><div class="step-num">2</div><div><b>调用</b>：请求带 <code>X-Api-Key</code> 头，越权/未授权 → 401/403，超限 → 429</div></div>
+      <div class="step"><div class="step-num">3</div><div><b>配额</b>：<code>GET /api/open/quota</code> 查 QPS/日Token/日预算；超额触发熔断</div></div>
+      <div class="step"><div class="step-num">4</div><div><b>SDK</b>：Python/Java/JavaScript 示例在 <code>docs/sdk-examples/</code></div></div>
+    </div>
+
+    <h2 id="security">8. 安全能力 <span class="tag sec">W20</span></h2>
+    <div class="card">
+      <table>
+        <tr><th>能力</th><th>接入点</th><th>说明</th></tr>
+        <tr><td><b>Prompt 注入检测</b></td><td>自动（Access 层 Filter）</td>
+            <td>所有 POST JSON 请求自动扫描；命中返 403 <code>INJECTION_BLOCKED</code>；样本 18/18 拦截</td></tr>
+        <tr><td><b>PII 日志脱敏</b></td><td>自动（审计切面）</td>
+            <td>身份证/银行卡/手机/邮箱/密钥 → <code>***</code>；审计日志已接入</td></tr>
+        <tr><td><b>手动检测</b></td><td><code>POST /api/security/injection/detect</code></td>
+            <td>检测规则 + 日志：<code>GET /api/security/injection/logs</code> / <code>/rules</code></td></tr>
+        <tr><td><b>租户越权防护</b></td><td>服务层校验</td>
+            <td>Agent/Workflow/记忆/工具授权 deny-by-default；13 条越权用例全拦截</td></tr>
+      </table>
+    </div>
+
+    <h2 id="ops">9. 运维管理 <span class="tag new">冲刺交付</span></h2>
+    <div class="card">
+      <table>
+        <tr><th>能力</th><th>入口/说明</th></tr>
+        <tr><td><b>成本看板</b></td><td><code>/cost-dashboard/</code>：Token/费用统计 + 预算告警 80%/100% + 熔断</td></tr>
+        <tr><td><b>删除级联</b></td><td><code>DELETE /api/admin/data/{tenantId}</code>：清记忆/向量/Token/运行/Workflow/血缘</td></tr>
+        <tr><td><b>保留期清理</b></td><td>自动：会话 180 天 / 记录 30 天 / Token 180 天 / RAG 180 天</td></tr>
+        <tr><td><b>健康检查</b></td><td><code>GET /actuator/health</code> ｜ <code>/actuator/prometheus</code></td></tr>
+        <tr><td><b>发布/回滚</b></td><td><code>scripts/发布Runbook.md</code> + <code>scripts/rollback演练脚本.md</code>（≤15min 恢复）</td></tr>
+        <tr><td><b>压测</b></td><td><code>python scripts/loadtest/load_test.py --duration 60 --qps 5</code>（四场景混合）</td></tr>
+      </table>
+    </div>
+
+    <h2 id="faq">10. 常见问题 FAQ</h2>
     <div class="card">
       <table>
         <tr><th>问题</th><th>答案</th></tr>
-        <tr><td>页面打开空白/报 404</td><td>确认端口 8082，且 <code>static/</code> 下对应目录有 <code>index.html</code></td></tr>
-        <tr><td>API 返回 401/403</td><td>检查 <code>X-Tenant-Id</code> 头；工具权限看 <code>/mcp-gateway/</code> 授权表</td></tr>
-        <tr><td>SSE 不流式/卡住</td><td>反代需 <code>proxy_buffering off;</code></td></tr>
-        <tr><td>工具注册校验失败</td><td><code>parameters</code> 须合法 JSON Schema；<code>description ≥ 20字</code>；<code>testcases ≥ 1条</code></td></tr>
-        <tr><td>Workflow 卡在审批</td><td><code>/workflow/</code> 审批页点"通过"，或 API <code>POST /api/workflow/runs/{id}/approve</code></td></tr>
-        <tr><td>多智能体总是 FAILED</td><td>看 <code>/multi-agent/</code> 详情页 plan 里子任务状态；预算默认 10000</td></tr>
-        <tr><td>技能发布被拦截</td><td>测试用例未全绿；查看 <code>/api/skill-hub/{id}</code> 版本历史里 test_result</td></tr>
-        <tr><td>助手路由选错技能</td><td>提问带 <code>skillHint</code> 字段显式指定技能名</td></tr>
+        <tr><td>页面 404</td><td>确认端口 8082，<code>static/</code> 下对应目录有 <code>index.html</code></td></tr>
+        <tr><td>API 401/403</td><td>检查 <code>X-Tenant-Id</code> 头；工具权限看 <code>/mcp-gateway/</code> 授权表</td></tr>
+        <tr><td>请求被 403 注入拦截</td><td>自动注入检测误拦：检查输入是否含"忽略/扮演/系统prompt"类词，调整措辞</td></tr>
+        <tr><td>429 限流</td><td>租户 QPS/日Token 超限或预算熔断；看 <code>/cost-dashboard/</code>，管理员清熔断</td></tr>
+        <tr><td>NL2SQL 结果缓存命中率低</td><td>不同措辞 = 不同缓存键；同问命中率看 <code>/api/data-agent/cache/stats</code></td></tr>
+        <tr><td>写操作没执行</td><td>可能处于"预览确认"等待状态：<code>/assistant/</code> 会话中需点"确认"</td></tr>
+        <tr><td>技能发布被拦截</td><td>测试用例未全绿；查看版本历史 test_result</td></tr>
+        <tr><td>开启 API Key 后自己调用失败</td><td>确认 <code>X-Api-Key</code> 正确；仅创建时展示明文，泄露就删/禁</td></tr>
       </table>
     </div>
 
     <div class="foot" style="font-size:12px;color:#99a;margin-top:30px;">
-      Agent Platform · W14 Skill Hub + 通用助手已就绪 · 使用说明书
+      Agent Platform · v2.0 · 已上线（端口 8082）· P1-P4 + 安全加固 + 上线冲刺完整交付
     </div>
   </div>
 </body>
