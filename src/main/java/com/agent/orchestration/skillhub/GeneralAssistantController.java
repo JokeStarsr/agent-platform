@@ -3,14 +3,20 @@ package com.agent.orchestration.skillhub;
 import com.agent.common.Result;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
  * L3 编排层：通用 AI 助手控制器（写操作预览前后端打通）
- * <p>提供：/ask 预览生成 → /preview/confirm 确认执行</p>
+ * <p>契约（与 static/assistant/app.js 对齐）：
+ *   POST /api/assistant/ask      {message, sessionId?, skillHint?}
+ *   POST /api/assistant/confirm  {sessionId, previewId, approved}
+ *   GET  /api/assistant/skills
+ *   GET  /api/assistant/preview/{previewId}
+ * </p>
  */
 @RestController
-@RequestMapping("/api/skill-hub")
+@RequestMapping("/api/assistant")
 public class GeneralAssistantController {
 
     private final GeneralAssistantService service;
@@ -24,27 +30,27 @@ public class GeneralAssistantController {
      */
     @PostMapping("/ask")
     public Result<Map<String, Object>> ask(
-            @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId,
-            @RequestParam String message,
-            @RequestParam(required = false) String sessionId,
-            @RequestParam(required = false) String skillHint
-    ) {
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
+        String message = String.valueOf(body.getOrDefault("message", ""));
+        String sessionId = (String) body.get("sessionId");
+        String skillHint = (String) body.get("skillHint");
         Map<String, Object> result = service.ask(tenantId, message, sessionId, skillHint);
         return Result.ok(result);
     }
 
     /**
-     * 确认写操作预览（用户点击"执行"按钮后调用）
+     * 确认写操作预览（用户点击"执行/拒绝"按钮后调用）
      */
-    @PostMapping("/preview/confirm")
-    public Result<Map<String, Object>> confirmPreview(
-            @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId,
-            @RequestParam String sessionId,
-            @RequestParam String previewId,
-            @RequestParam boolean approved
-    ) {
+    @PostMapping("/confirm")
+    public Result<Map<String, Object>> confirm(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
+        String sessionId = (String) body.get("sessionId");
+        String previewId = (String) body.get("previewId");
+        boolean approved = Boolean.TRUE.equals(body.get("approved"));
+
         if (!approved) {
-            // 用户拒绝，返回取消结果
             Map<String, Object> result = Map.of(
                     "sessionId", sessionId,
                     "status", "CANCELLED",
@@ -53,9 +59,17 @@ public class GeneralAssistantController {
             return Result.ok(result);
         }
 
-        // 用户确认，继续执行
         Map<String, Object> result = service.confirm(tenantId, sessionId, previewId, true);
         return Result.ok(result);
+    }
+
+    /**
+     * 可用技能清单（前端"可用技能"卡片）
+     */
+    @GetMapping("/skills")
+    public Result<List<Map<String, Object>>> skills(
+            @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId) {
+        return Result.ok(service.skills());
     }
 
     /**
@@ -64,13 +78,11 @@ public class GeneralAssistantController {
     @GetMapping("/preview/{previewId}")
     public Result<Map<String, Object>> getPreview(
             @RequestHeader(value = "X-Tenant-Id", defaultValue = "default") String tenantId,
-            @PathVariable String previewId
-    ) {
+            @PathVariable String previewId) {
         var previewOpt = service.getPreview(previewId);
         if (previewOpt.isEmpty()) {
             return Result.error(404, "预览不存在或已过期");
         }
-
         var preview = previewOpt.get();
         Map<String, Object> detail = Map.of(
                 "previewId", preview.previewId(),
